@@ -1,0 +1,43 @@
+<form [formGroup]="characterForm" (ngSubmit)="onCreateCharacter()" class="form-container">
+    <div class="signup-header">
+        <h1>Create Your Character</h1>
+    </div>
+
+    <div class="form-group">
+        <label class="col-form-label">Character Name:</label>
+        <input type="text" formControlName="characterName" placeholder="Character Name" class="form-control">
+    </div>
+
+    <div class="form-group">
+        <label class="col-form-label">Class:</label>
+        <select formControlName="characterClass" class="form-control">
+            <option value="" disabled>Select Class</option>
+            <option value="warrior">Warrior</option>
+            <option value="wizard">Wizard</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="col-form-label">Race:</label>
+        <select formControlName="characterRace" class="form-control">
+            <option value="" disabled>Select Race</option>
+            <option value="human">Human</option>
+            <option value="elf">Elf</option>
+        </select>
+    </div>
+
+    <div class="row mb-3">
+        <label for="gender" class="col-form-label">Gender:</label>
+        <div class="col">
+            <select formControlName="characterGender" class="form-control">
+                <option value="" disabled>Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row create-account">
+        <button type="submit" class="custom-button">Create Character</button>
+    </div>
+</form>

@@ -1,0 +1,79 @@
+/* General styles for the form container */
+.form-container {
+    background-color: #f8f8f8; /* Light grey background */
+    box-shadow: inset 0 0.625em 1.875em rgba(0, 0, 0, 0.8); /* Inner shadow for depth */
+    border-radius: 1.25em; /* Rounded corners */
+    padding: 2.125em; /* Spacing inside the container */
+    font-family: 'Montserrat', sans-serif; /* Font styling */
+    max-width: 600px; /* Adjust as needed */
+    margin: auto; /* Center the container */
+    margin-top: 2em;
+}
+
+/* Header styles */
+.signup-header h1 {
+    text-align: center; /* Center header text */
+    font-size: 1.5em; /* Header font size */
+    font-weight: 500; /* Medium font weight */
+    margin-bottom: 1.875em; /* Spacing below header */
+}
+
+/* Form group styling */
+.form-group {
+    margin-bottom: 1em; /* Space between form groups */
+}
+
+/* Label styling */
+.col-form-label {
+    display: block; /* Ensure label takes full width */
+    margin-bottom: 0.5em; /* Space below label */
+    font-size: 0.9em; /* Label font size */
+}
+
+/* Input and select styling */
+.form-control {
+    width: 100%; /* Full width */
+    border: 1px solid #e0e0e0; /* Light grey border */
+    padding: 0.5em; /* Padding inside */
+    border-radius: 0.25em; /* Rounded corners */
+    font-size: 0.9em; /* Font size */
+}
+
+.form-control:focus {
+    outline: none; /* Remove default outline */
+    border-color: #909090; /* Darker border on focus */
+    box-shadow: 0 0 0.4375em #909090; /* Pronounced shadow on focus */
+}
+
+/* Button styling */
+.custom-button {
+    background: #2f2f2f; /* Dark grey background */
+    border: none; /* No border */
+    padding: 1em 0; /* Vertical padding */
+    border-radius: 0.625em; /* Rounded corners */
+    color: white; /* White text color */
+    width: 100%; /* Full width */
+    font-size: 0.9em; /* Font size */
+    cursor: pointer; /* Pointer cursor on hover */
+    text-align: center; /* Center text */
+}
+
+.custom-button:hover {
+    background-color: #3a3a3a; /* Slightly lighter on hover */
+    color: #fff; /* White text */
+}
+
+/* Responsive styling for smaller screens */
+@media (max-width: 767px) {
+    .form-container {
+        max-width: 90%; /* Wider on small screens */
+        padding: 1em; /* Less padding */
+        box-shadow: none; /* Remove shadow */
+    }
+
+    .signup-header h1 {
+        font-size: 1.2em; /* Smaller font size */
+    }
+}
+
+//* Additional media queries for other screen sizes can be added as

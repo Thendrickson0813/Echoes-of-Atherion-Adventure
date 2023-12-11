@@ -1,0 +1,290 @@
+/* LOGIN SCREEN autorization form */
+
+.auth-forms {
+  
+  margin: 10em 5em;
+  background: #fff;
+  padding: 25px 25px 25px 25px;
+  -moz-box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
+  -webkit-box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.8);
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  border-radius: 20px;
+}
+
+.auth-forms h2 {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  text-align: left;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+/* Custom styles for form inputs */
+.form-input {
+  width: 100%;
+  /* Full width of the parent div */
+  padding: 10px 20px;
+  /* Adjust padding as needed */
+  margin: 0;
+  /* No margin for no space between inputs */
+  box-sizing: border-box;
+  /* Padding and border are included in the width */
+  
+  border-radius: 0px;
+  /* Slightly rounded borders for a modern look */
+  background-color: #f8f8f8;
+  /* Light background color */
+  transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+  /* Smooth transition for hover effects */
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  
+  font-size: 14px;
+}
+
+.email-radius {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.password-radius {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.email-password,
+.margin-15 {
+  margin-bottom: 20px;
+}
+
+/* Hover effect for form inputs */
+.form-input:hover {
+  border-color: #2f2f2f;
+  /* Blue border on hover - match this to your theme */
+  box-shadow: 0 0 5px #2f2f2f;
+  /* Slight shadow for depth */
+  background-color: #fff;
+  /* White background on hover */
+}
+
+/* Focus effect for form inputs */
+.form-input:focus {
+  outline: none;
+  /* Remove default focus outline */
+  border-color: #8b8b8b;
+  /* Blue border on focus - match this to your theme */
+  box-shadow: 0 0 7px #7a7a7a;
+  /* More pronounced shadow for focus */
+}
+
+/* Style for error messages */
+.error-message {
+  display: block;
+  /* Ensure it's a block level element so it takes its own line */
+  color: #dc3545;
+  /* Bootstrap's danger color for errors */
+  margin-top: 0px;
+  /* Space above the error message */
+  font-size: 0.875rem;
+  /* Smaller font size for error message */
+  background-color: #2f2f2f;
+}
+.alert-danger {
+  display: block;
+  /* Ensure it's a block level element so it takes its own line */
+  color: white;
+  /* Bootstrap's danger color for errors */
+  margin-top: 0px;
+  /* Space above the error message */
+  background-color: #2f2f2f;
+  border-color: #2f2f2f;
+  border-radius: 0px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  padding: 10px 20px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-weight: lighter;
+  font-size: 11px;
+}
+.bottom-left a {
+  color: black;
+  text-decoration: none;
+}
+.auth-formsRegister {
+  max-width: 400px;
+  margin: 30% auto;
+  background: #fff;
+  padding: 25px 25px 25px 25px;
+  -moz-box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
+  -webkit-box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.8);
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  /* This will space out the buttons equally */
+  margin-bottom: 1px;
+  /* Add some space below the buttons */
+}
+
+.btn-google,
+.btn-apple,
+.btn-github,
+.btn-microsoft {
+  flex: 1;
+  /* Each button will take up an equal amount of space */
+
+  /* Add some space between the buttons */
+  /* ... other styles ... */
+}
+
+.bottom-flex {
+  display: flex;
+  justify-content: space-between;
+  /* This will space out the buttons equally */
+  margin-bottom: 0px;
+  /* Add some space below the buttons */
+}
+
+.bottom-right {
+  //signin button
+  flex: 1;
+  /* Each button will take up an equal amount of space */
+  margin: 0 0px;
+  text-align: right;
+}
+.bottom-flex div a:hover {
+    background-color: white;
+    /* Slightly lighter grey */
+    color: #3a3a3a;
+    /* Keeping text color white for contrast */
+    font-size: 13px;
+  
+  }
+
+//forgot password and create acount
+.bottom-left {
+  text-align: left;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-weight: lighter;
+  font-size: 12px;
+}
+
+.btn-signIn {
+  background: #2f2f2f;
+  border: none;
+  padding: 10px;
+  margin-right: 0px;
+  border-radius: 10px;
+  color: white;
+  width: 100px;
+}
+
+.btn-google {
+  background: #2f2f2f;
+  border: none;
+  width: 100%;
+  padding: 10px;
+  margin-right: 0px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 0px;
+  color: white;
+}
+
+.btn-microsoft {
+  background: #2f2f2f;
+  border: none;
+  width: 100%;
+  padding: 10px;
+  margin-left: 1px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 10px;
+  color: white;
+  background-image: ('../../../assets/images/ms-symbollockup_mssymbol_19.png');
+}
+
+.btn-microsoft img {
+  width: 20px;
+  /* Adjust the size as needed */
+  height: 20px;
+  /* Adjust the size as needed */
+  margin-right: 0px;
+  /* Space between image and text */
+  color: white;
+}
+
+.btn-apple {
+  background: #2f2f2f;
+  border: none;
+  width: 100%;
+  padding: 10px;
+  margin-left: 1px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 0px;
+  color: white;
+}
+
+.btn-github {
+  background: #2f2f2f;
+  border: none;
+  width: 100%;
+  padding: 10px;
+  margin-left: 0px;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 10px;
+  color: white;
+}
+button, input, optgroup, select, textarea {
+  width: 100%;
+  
+}
+.custom-button:hover {
+  background-color: #3a3a3a;
+  /* Slightly lighter grey */
+  color: #fff;
+  /* Keeping text color white for contrast */
+
+}
+
+.custom-button:active,
+.custom-button:focus {
+  background-color: #1e1e1e;
+  /* Even darker shade for active state */
+  border-color: #4a90e2;
+  /* A blue border for focus/active state */
+  color: #fff;
+}
+.custom-button:disabled {
+  background-color: #777777; /* Lighter grey to indicate disabled */
+  color: #cccccc; /* Dimmed text color */
+  cursor: not-allowed;
+}
+
+/* Style for the divider with the text 'OR' */
+.divider {
+  text-align: center;
+  margin: 10px 0;
+  font-weight: 700;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+.reset-pass{
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 500;
+  color: red;
+  margin-bottom: 5px;
+}

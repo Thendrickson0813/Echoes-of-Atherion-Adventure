@@ -1,0 +1,48 @@
+/* Top Title on Splash Screen */
+.form-container {
+    background-color: #f8f8f8; /* Light grey background */
+    box-shadow: inset 0 0.625em 1.875em rgba(0, 0, 0, 0.8); /* Inner shadow for depth */
+    border-radius: 1.25em; /* Rounded corners */
+    padding: 2.125em; /* Spacing inside the container */
+    font-family: 'Montserrat', sans-serif;/* Font styling */
+    max-width: 600px; /* Adjust this value as needed */
+    margin: auto; /* This centers the container if it's smaller than the parent */
+    margin-top: 2em;
+}
+
+.centered-container {
+    display: flex;
+    justify-content: center; /* Horizontal centering */
+    align-items: center; /* Vertical centering */
+    /* Removed the fixed height to allow natural content flow */
+    padding: 1em; /* Padding to prevent content touching edges */
+}
+
+.heroOne {
+    background-color: #f8f8f8; /* Light grey background */
+    box-shadow: inset 0 0.625em 1.875em rgba(0, 0, 0, 0.8); /* Inner shadow for depth */
+    border-radius: 1.25em; /* Rounded corners */
+    padding: 2.125em; /* Spacing inside the container */
+    font-family: 'Montserrat', sans-serif;/* Font styling */
+    max-width: 600px; /* Adjust this value as needed */
+    margin: auto; /* This centers the container if it's smaller than the parent */
+    margin-top: 2em;
+}
+
+
+.heroOne h1 {
+    font-family: cursive;
+    font-size: 45px;
+    font-weight: 700;
+    color: black;
+    text-align: center;
+}
+
+.heroOne p {
+    font-size: 20px;
+    color: black;
+    font-weight: normal;
+    text-align: center;
+}
+/* Top title ends here */
+

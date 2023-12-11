@@ -1,0 +1,40 @@
+div.interactive-window{
+    /* Reduce scrollbar width */
+    scrollbar-width: thin;
+}
+.interactive-window {
+   border: 1px solid #ccc;
+   padding: 0px;
+   width: 300px;
+   min-height: 300px;
+   background-image: url('../../../assets/images/black.jpg');
+
+}
+
+.window-header {
+   font-size: 20px;
+   background-color: rgb(70, 87, 238);
+   /* Example blue background */
+   color: white;
+   /* Example text color */
+   padding: 0px 5px;
+   /* Padding for spacing */
+   margin-bottom: 0;
+   /* Remove bottom margin to avoid extra line spacing */
+   border: solid 1px rgb(21, 62, 208);
+   box-shadow: 0 5px 8px rgb(0, 0, 97);
+   /* Larger box-shadow on hover/focus for 3D effect */
+   border-radius: 10px;
+   margin-bottom: 10px;
+}
+
+button {
+   background-color: transparent;
+   color: white;
+}
+
+.content {
+   height: 500px;
+   /* Larger height to make it scrollable */
+
+}

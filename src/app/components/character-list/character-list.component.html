@@ -1,0 +1,43 @@
+<!-- Character List Component HTML -->
+<div class="no-scroll">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-4 col-sm-2 character-name-list">
+            </div>
+            <!-- Character names Middle -->
+            <div class="col-md-4 col-sm-4 character-name-list view-container">
+                <div class="form-wrapper">
+                    <div class="form-container">
+                        <div class="signup-header">
+                            <h1>Choose Your Character <br><span class="game-name">Echoes of Atherion!</span></h1>
+                        </div>
+                        <div *ngFor="let character of characters" (click)="onSelectCharacter(character)" class="character-name">
+                            {{ character.characterName }}
+                        </div>
+                        <div *ngIf="characters.length === 0" class="no-characters">
+                            <p>No characters found. <a routerLink="/create-character">Create one?</a></p>
+                        </div>
+                    </div>
+                    <button *ngIf="selectedCharacter" class="btn-black btn-margin" (click)="playWithSelectedCharacter()">
+                        Play with {{ selectedCharacter.characterName }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Character stats on the right side -->
+            <div class="col-md-4 col-sm-4 character-stats">
+                <div class="stats-container" *ngIf="selectedCharacter">
+                    <h2>{{ selectedCharacter.characterName }}</h2>
+                    <p>Class: {{ selectedCharacter.characterClass }}</p>
+                    <p>Race: {{ selectedCharacter.characterRace }}</p>
+                    <!-- Add more stats as needed -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ... existing character list code ... -->
+
+    <!-- Button to select the character and navigate to '/play' -->
+
+
+</div>

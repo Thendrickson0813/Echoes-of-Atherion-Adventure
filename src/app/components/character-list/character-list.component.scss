@@ -1,0 +1,80 @@
+.view-container {
+    background-color: #f8f8f8;
+    /* Light grey background */
+    box-shadow: inset 0 0.625em 1.875em rgba(0, 0, 0, 0.8);
+    /* Inner shadow for depth */
+    border-radius: 1.25em;
+    /* Rounded corners */
+    padding: 2.125em;
+    /* Spacing inside the container */
+    font-family: 'Montserrat', sans-serif;
+    /* Font styling */
+    max-width: 600px;
+    /* Adjust this value as needed */
+    height: 600px;
+    margin: auto;
+    /* This centers the container if it's smaller than the parent */
+    margin-top: 2em;
+}
+
+/* Character List Styles */
+.character-name-list .form-container {
+    max-height: 600px;
+    overflow-y: auto;
+    /* Scrollable list */
+}
+
+.character-name {
+    padding: 0.5em;
+    border-bottom: 1px solid #000000cc;
+    cursor: pointer;
+    background: linear-gradient(to right, rgb(255, 255, 255), rgba(163, 162, 167, 0.637));
+    font-size: .9em;
+    font-weight: 600;
+
+}
+
+.character-name:hover {
+    background-color: #f0f0f0;
+}
+
+.character-stats .stats-container {
+    background-color: #fff;
+    padding: 2em;
+    border-radius: 0.25em;
+    margin-top: 2em;
+}
+
+.character-stats p {
+    margin-bottom: 0;
+    padding: 0em 2em;
+}
+
+/* Adjust header styles if needed */
+.signup-header h1 {
+    font-size: 1em;
+}
+
+.game-name {
+    font-weight: bold;
+    font-size: 1.9em;
+}
+
+.no-characters {
+    text-align: center;
+    padding: 2em;
+}
+
+.btn-margin {
+    margin: 20px auto;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 767px) {
+
+    .character-name-list,
+    .character-stats {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

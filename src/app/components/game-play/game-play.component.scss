@@ -1,0 +1,209 @@
+.roomDescriptionViewer {
+    background-color: black;
+    color: white;
+    border-radius: 0.5em;
+    position: static;
+    display: block;
+    overflow: hidden;
+    padding-bottom: 5px;
+    /* Adjust padding as needed */
+    border-bottom: 1px solid transparent;
+    /* This adds a line beneath each message */
+    margin-bottom: 5px;
+    /* Adjust margin as needed */
+
+}
+
+.roomDescriptionViewer:last-child {
+    border-bottom: none;
+    /* Remove border from the last element to prevent double lines */
+}
+
+.feed {
+    /* ... existing styles ... */
+    height: 100%;
+    /* Set a height to define the space for the flex container */
+    display: flex;
+    flex-direction: column;
+    /* Stack children vertically */
+    padding: 10px 40px;
+    
+}
+
+.message-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    color: white;
+    }
+
+.container-fluid {
+    max-height: 100vh;
+    /* Viewport Height */
+    overflow: hidden;
+    /* Prevents scrolling */
+}
+
+
+.row,
+.col-md-3,
+.col-md-6 {
+    max-height: 100%;
+    overflow: auto;
+    /* Scrollbars appear if content overflows */
+}
+
+/* Shared styles for both .new and .new1 */
+.new,
+.new1 {
+    height: 70vh;
+    background-image: url('../../../assets/images/sqWood.jpg');
+    position: relative;
+    border-radius: 0.5em;
+    overflow: scroll;
+}
+
+/* Unique styles for .new */
+.new {
+    float: right;
+}
+
+/* Unique styles for .new1 */
+.new1 {
+    float: left;
+}
+
+/* Scrollbar customization for Chrome, Safari, and Opera */
+.new::-webkit-scrollbar,
+.new1::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.new::-webkit-scrollbar-thumb,
+.new1::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.new::-webkit-scrollbar-thumb:hover,
+.new1::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Scrollbar customization for Firefox */
+.new,
+.new1 {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f8f8f8;
+}
+
+/* For IE and Edge */
+.new,
+.new1 {
+    -ms-overflow-style: auto;
+}
+
+
+.boxHeader {
+    padding: 0.25em;
+    color: lightgrey;
+    width: 100%;
+    border-top-left-radius: 0.5em;
+    border-top-right-radius: 0.25em;
+    background-color: #59413b;
+    position: inherit;
+}
+
+.boxHeader .myButton {
+    float: right;
+    clear: both;
+    margin-top: 0.1875em;
+    margin-right: 0.1875em;
+}
+
+
+.feed {
+    background-color: black;
+    height: 70vh;
+    width: 100%;
+    box-shadow: 0 0 1.875em rgba(0, 0, 0, 0.8);
+}
+
+.text-push {
+    overflow: auto;
+}
+
+.text-push li {
+    line-height: 1.2;
+    padding: .4em .5em;
+}
+
+.sortable {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sortable li {
+    margin: 0 0.1875em 0.1875em 0.1875em;
+    height: 21em;
+    width: 15em;
+    border-radius: 0.5em;
+    color: white;
+}
+
+.form-control {
+    background-color: black;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 2.3125em;
+    margin-bottom: 1em;
+}
+
+.ui-state-default {
+    background-image: url('../../../assets/images/black.jpg');
+    background-size: cover;
+}
+.btn-black {
+    background-color: #000; /* Black background color */
+    color: #fff; /* White text color */
+    padding: 5px 20px; /* Top and bottom padding, left and right padding */
+    font-size: 16px; /* Size of the text */
+    font-weight: bold; /* Make the text bold */
+    border: 1px solid #000; /* Black border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Cursor to pointer to indicate it's clickable */
+    text-decoration: none; /* No underline for text */
+    display: inline-block; /* Display as inline-block */
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s; /* Transition for the hover effect */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Box-shadow for 3D effect */
+    margin: 0px 3px;
+  }
+  
+  .btn-black:hover,
+  .btn-black:focus {
+    background-color: #333; /* Dark grey background on hover/focus */
+    color: #e6e6e6; /* Light grey text on hover/focus */
+    border-color: #666; /* Dark grey border on hover/focus */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Larger box-shadow on hover/focus for 3D effect */
+    outline: none; /* Remove outline on focus */
+    text-decoration: none; /* Ensure no underline on focus */
+  }
+  
+  .btn-black:active {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Smaller box-shadow on active for clicked effect */
+    transform: translateY(1px); /* Push the button down a pixel to look pressed */
+  }
+  
+/* Adjustments for smaller screens */
+@media (max-width: 768px) {
+
+    .container-fluid,
+    .row,
+    .col-md-3,
+    .col-md-6 {
+        overflow: auto;
+        /* Allows scrolling on smaller devices */
+    }
+}

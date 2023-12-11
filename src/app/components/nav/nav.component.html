@@ -1,0 +1,21 @@
+<!-- nav.component.html -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/splash-screen">Echoes of Atherion: <span>War of the Virulent</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+</button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="custom-button nav-item" *ngIf="(authService.user$ | async) && !isLoginRoute">
+                    <a class="btn-black" (click)="signOut()">Logout</a>
+                </li>
+                <li class="nav-item" *ngIf="!(authService.user$ | async) && !isLoginRoute">
+                    <a class="nav-link" [routerLink]="['/login']">Login</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

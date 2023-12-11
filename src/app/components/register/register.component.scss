@@ -1,0 +1,199 @@
+/* General styles for the form container */
+.form-container {
+    background-color: #f8f8f8; /* Light grey background */
+    box-shadow: inset 0 0.625em 1.875em rgba(0, 0, 0, 0.8); /* Inner shadow for depth */
+    border-radius: 1.25em; /* Rounded corners */
+    padding: 2.125em; /* Spacing inside the container */
+    font-family: 'Montserrat', sans-serif;/* Font styling */
+    max-width: 600px; /* Adjust this value as needed */
+    margin: auto; /* This centers the container if it's smaller than the parent */
+    margin-top: 2em;
+}
+
+/* Center the container both vertically and horizontally */
+/* Container for centering the form */
+.centered-container {
+    display: flex;
+    justify-content: center; /* Horizontal centering */
+    align-items: center; /* Vertical centering */
+    /* Removed the fixed height to allow natural content flow */
+    padding: 1em; /* Padding to prevent content touching edges */
+}
+
+/* Hide placeholder text when input is in focus */
+input::placeholder {
+    color: transparent;
+}
+
+/* Header styles inside the sign-up form */
+.signup-header h1 {
+    text-align: center; /* Center header text */
+    font-size: 1.5em; /* Header font size */
+    font-weight: 500; /* Bold font weight */
+    margin-bottom: 1.875em; /* Spacing below header */
+}
+
+.game-name {
+    font-weight: 900;
+    font-size: 1.8em;
+}
+
+/* Prevent label from wrapping to ensure alignment */
+.col-form-label {
+    white-space: nowrap;
+    font-size: .9em; /* Label font size */
+}
+
+/* Ensure form rows do not wrap on larger screens */
+.row.mb-4 {
+    flex-wrap: nowrap;
+}
+
+/* Full-width inputs with additional styling */
+.form-control {
+    width: 100%; /* Full width of parent */
+    border: 0.0625em solid #e0e0e0; /* Light grey border */
+    padding: 0.3125em; /* Padding inside input */
+    border-radius: 0.25em; /* Rounded corners for input */
+}
+
+/* Style changes on input hover */
+.form-control:hover {
+    border-color: #b0b0b0; /* Darker border */
+    box-shadow: 0 0 0.3125em #b0b0b0; /* Slight shadow for depth */
+    background-color: #fff; /* White background */
+}
+
+/* Style changes on input focus */
+.form-control:focus {
+    outline: none; /* Remove default outline */
+    border-color: #909090; /* Darker border on focus */
+    box-shadow: 0 0 0.4375em #909090; /* Pronounced shadow on focus */
+}
+
+/* Button hover state styling */
+.custom-button:hover {
+    background-color: #3a3a3a; /* Darker background on hover */
+    color: #fff; /* White text color */
+}
+
+/* Button active and focus state styling */
+.custom-button:active,
+.custom-button:focus {
+    background-color: #1e1e1e; /* Even darker background on active */
+    border-color: #4a90e2; /* Blue border for active/focus */
+    color: #fff; /* White text color */
+}
+
+/* Button disabled state styling */
+.custom-button:disabled {
+    background-color: #777777; /* Light grey background */
+    color: #cccccc; /* Dimmed text color */
+    cursor: not-allowed; /* Indicate button is not clickable */
+}
+
+/* General button styling */
+.custom-button {
+    background: #2f2f2f; /* Dark grey background */
+    border: none; /* No border */
+    padding: 1em 0em; /* Horizontal padding */
+    border-radius: 0.625em; /* Rounded corners */
+    color: white; /* White text color */
+}
+
+.validation-message {
+    color: red; /* Change to your preferred color */
+    font-size: 0.7em; /* Smaller font size for error messages */
+    margin-top: 0.1em; /* Spacing above the message */
+    font-style: italic;
+
+}
+.terms-acknowledgment {
+    font-size: .6em; /* Label font size */
+    font-weight: 500; /* Thin font weight */
+    text-decoration: none;
+    font-style: italic;
+    margin: 2.5em auto;
+    padding: 0em 8em;
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+    font-weight: bolder;
+    font-style: normal;
+}
+.bottom-form {
+    text-align: center;
+    margin-top: 1em;
+}
+
+@media (max-width: 767px) {
+    .form-container {
+        max-width: 90%; /* Wider on small screens for better use of space */
+        padding: 1em; /* Less padding on smaller screens */
+        box-shadow: none;
+    }
+}
+
+/* Responsive styling for smaller screens */
+@media (max-width: 47.9375em) { /* 767px / 16px = 47.9375em */
+    
+    
+}
+
+/* Larger smartphones */
+@media (min-width: 480px) {
+  .form-control {
+    /* styles for larger smartphones */
+  }
+}
+
+/* Tablets in portrait mode */
+@media (min-width: 600px) {
+  .form-control {
+    /* styles for portrait tablets */
+  }
+}
+
+/* Tablets in landscape mode and small laptops */
+@media (min-width: 768px) {
+  .form-control {
+    /* styles for landscape tablets and small laptops */
+  }
+}
+
+/* Medium laptops */
+@media (min-width: 1024px) {
+  .form-control {
+    /* styles for medium laptops */
+  }
+}
+
+/* Large screens */
+@media (min-width: 1280px) {
+  .form-control {
+    /* styles for large screens */
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1440px) {
+  .form-control {
+    /* styles for extra large screens */
+  }
+}
+/* Custom media query for viewport widths of 1020px or lower */
+@media (max-width: 1020px) {
+    .form-control-label {
+      /* This will make the label take the full width, forcing the input below it */
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+    .form-control-wrap {
+      /* This will also make the input take the full width below the label */
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }

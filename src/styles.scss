@@ -1,0 +1,143 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+  background-image: url('./assets/images/brickwall.jpg');
+
+  /* box-shadow: 0 0 3.125em rgba(0, 0, 0, 0.8);*/
+
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center center;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+/* In your CSS file */
+.item-name,
+.character-name {
+  color: rgb(93, 143, 218);
+  font-weight: 500;
+}
+
+.align-right[_ngcontent-ng-c1541196254] {
+  /* Enable vertical scrolling */
+  overflow-y: scroll;
+  /* Reduce scrollbar width */
+  scrollbar-width: thin;
+
+  /* Chrome, Safari, Opera */
+  ::-webkit-scrollbar-thumb {
+    background-color: #010101;
+  }
+
+  /* Firefox */
+  ::-moz-scrollbar-thumb {
+    background-color: #ccc;
+  }
+
+  /* Internet Explorer */
+  ::-ms-scrollbar-thumb {
+    background-color: #ccc;
+  }
+}
+
+.feed-message {
+  padding: 0px 30px;
+}
+
+.item-list {
+  margin-top: 2px;
+  /* Adjust as needed */
+  padding-left: 30px;
+  font-style: italic;
+  display: block;
+}
+
+.room-name-header {
+  font-size: 20px;
+  background-color: rgb(70, 87, 238);
+  /* Example blue background */
+  color: white;
+  /* Example text color */
+  padding: 5px 30px;
+  /* Padding for spacing */
+  margin-bottom: 0;
+  /* Remove bottom margin to avoid extra line spacing */
+  border: solid 1px rgb(21, 62, 208);
+  box-shadow: 0 5px 8px rgb(0, 0, 97);
+  /* Larger box-shadow on hover/focus for 3D effect */
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+// Inside styles.scss
+input[type="email"],
+input[type="password"] {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  padding-left: 15px !important;
+  margin: 0px 0px !important;
+  box-sizing: border-box;
+  /* Ensure padding doesn't affect total height */
+  height: auto !important;
+  /* Allow the input height to grow with padding */
+  line-height: normal !important;
+  /* Adjust line height to ensure text is vertically centered */
+}
+
+.btn-black {
+  background-color: #000;
+  /* Black background color */
+  color: #fff;
+  /* White text color */
+  padding: 5px 20px;
+  /* Top and bottom padding, left and right padding */
+  font-size: 16px;
+  /* Size of the text */
+  font-weight: bold;
+  /* Make the text bold */
+  border: 1px solid #000;
+  /* Black border */
+  border-radius: 5px;
+  /* Rounded corners */
+  cursor: pointer;
+  /* Cursor to pointer to indicate it's clickable */
+  text-decoration: none;
+  /* No underline for text */
+  display: inline-block;
+  /* Display as inline-block */
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  /* Transition for the hover effect */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* Box-shadow for 3D effect */
+  margin: 0px 3px;
+}
+
+.btn-black:hover,
+.btn-black:focus {
+  background-color: #333;
+  /* Dark grey background on hover/focus */
+  color: #e6e6e6;
+  /* Light grey text on hover/focus */
+  border-color: #666;
+  /* Dark grey border on hover/focus */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  /* Larger box-shadow on hover/focus for 3D effect */
+  outline: none;
+  /* Remove outline on focus */
+  text-decoration: none;
+  /* Ensure no underline on focus */
+}
+
+.btn-black:active {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* Smaller box-shadow on active for clicked effect */
+  transform: translateY(1px);
+  /* Push the button down a pixel to look pressed */
+}
+#roomDescriptionViewer {
+  background-color: black;
+  color: white;
+}

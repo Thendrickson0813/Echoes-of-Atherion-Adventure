@@ -1,0 +1,113 @@
+<div class="no-scroll">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-2 col-md-1 d-none d-md-block">
+                <div class="splashImgLeft"></div>
+            </div>
+            <div class="col-lg-8 col-md-10 col-12 centered-container">
+                <div class="form-wrapper">
+                    <form (ngSubmit)="onRegister()" [formGroup]="registerForm" class="form-container">
+                        <!-- Header -->
+                        <div class="signup-header">
+                            <h1>Sign Up to Play <br><span class="game-name">Echoes of Atherion!</span></h1>
+                        </div>
+
+                        <!-- First Name Field -->
+                        <div class="row mb-3">
+                            <label for="firstName" class="col-lg-4 col-md-4 col-sm-4 col-form-label">First Name:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" id="firstName" class="form-control" formControlName="firstName" placeholder="First Name">
+                                <div *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched" class="validation-message">
+                                    First Name is required and must be in a valid format.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Last Name Field -->
+                        <div class="row mb-3">
+                            <label for="lastName" class="col-lg-4 col-md-4 col-sm-4 col-form-label">Last Name:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" id="lastName" class="form-control" formControlName="lastName" placeholder="Last Name">
+                                <div *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched" class="validation-message">
+                                    Last Name is required and must be in a valid format.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email Field -->
+                        <div class="row mb-3">
+                            <label for="email" class="col-lg-4 col-md-4 col-sm-4 col-form-label">Email:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="email" id="email" class="form-control" formControlName="email" placeholder="Email">
+                                <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="validation-message">
+                                    Email is required and must be in a valid format.
+                                </div>
+                                <div *ngIf="errorMessage" class="error-message">
+                                    {{ errorMessage }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="row mb-3">
+                            <label for="password" class="col-lg-4 col-md-4 col-sm-4 col-form-label">Password:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="password" id="password" class="form-control" formControlName="password" placeholder="Password">
+
+                                <!-- Display error messages -->
+                                <div *ngIf="registerForm.get('password')?.touched">
+                                    <div *ngIf="registerForm.get('password')?.errors?.['required']" class="validation-message">
+                                        Password is required.
+                                    </div>
+                                    <div *ngIf="registerForm.get('password')?.errors?.['pattern']" class="validation-message">
+                                        Password must be at least 7 characters and include at least one number, one letter, and one special character.
+                                    </div>
+                                    <div *ngIf="registerForm.get('password')?.errors?.['minlength']" class="validation-message">
+                                        Password must be at least 7 characters long.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confirm Password Field -->
+                        <div class="row mb-3">
+                            <label for="confirmPassword" class="col-lg-4 col-md-4 col-sm-4 col-form-label">Confirm Password:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="password" id="confirmPassword" class="form-control" formControlName="confirmPassword" placeholder="Confirm Password">
+                                <div *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched" class="validation-message">
+                                    Confirmed Password is required.
+                                </div>
+                                <!-- Add this line for password mismatch error -->
+                                <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="validation-message">
+                                    Passwords does not match.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms & Conditions Acknowledgment -->
+                        <div class="terms-container">
+                            <p class="terms-acknowledgment">
+                                By clicking "Create Account", I acknowledge and agree to the
+                                <a href="link-to-privacy-policy" target="_blank">Privacy Policy</a>,
+                                <a href="link-to-conditions-of-use" target="_blank">Conditions of Use</a>,
+                                and the Echoes of Atherion <a href="link-to-terms-and-conditions" target="_blank">Terms & Conditions</a>.
+                            <div class="row create-account">
+
+                                <button type="submit" class="custom-button" [disabled]="!registerForm.valid">Create
+                                    Account</button>
+                            </div>
+                            <div class="bottom-form">
+
+
+                                <p>Already have an account? <a class="Sign-in" [routerLink]="['/login']">Sign in</a></p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-1 d-none d-md-block">
+                <div class="splashImgRight"></div>
+            </div>
+        </div>
+    </div>
+</div>
