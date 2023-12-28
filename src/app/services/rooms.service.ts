@@ -8,6 +8,7 @@ import { Room } from '../models/locations'; // Ensure this is the correct path
 import { Item } from '../models/item';
 import { Characters } from '../models/character';
 import { onSnapshot, QuerySnapshot } from 'firebase/firestore';
+import { ItemsService } from './items.service';
 
 
 @Injectable({
@@ -21,7 +22,10 @@ export class RoomsService {
   private currentRoomItems = new BehaviorSubject<Item[]>([]);
   private currentRoomCharacters = new BehaviorSubject<Characters[]>([]);
 
-  constructor(private textFeedService: TextFeedService) { }
+  constructor(
+    private textFeedService: TextFeedService,
+    private itemsService: ItemsService
+    ) { }
 
   listenToRoomItems(roomLocation: string): void {
     const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
@@ -66,7 +70,7 @@ export class RoomsService {
       this.currentRoomName.next(roomData.name); // Update room name
       this.currentRoomDescription.next(roomData.description); // Update room description
       // Fetch items in the room
-      this.getItemsInRoom(location).subscribe((items) => {
+      this.itemsService.getItemsInRoom(location).subscribe((items) => {
         const visibleItems = items.filter(item => !item.isPickedUp).map(item => `<span class="item-name">${item.name}</span>`).join(', ');
 
         // Format room entry message with room name, description, and visible items
@@ -89,36 +93,8 @@ export class RoomsService {
       return false;
     }
   }
-  isItemInRoom(itemName: string, roomLocation: string): Observable<boolean> {
-    const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
-    return from(getDocs(itemsRef)).pipe(
-      map((querySnapshot) =>
-        querySnapshot.docs.some(docSnapshot => {
-          const item = docSnapshot.data();
-          return item['name'] === itemName && !item['isPickedUp'];
-        })
-      ),
-      first() // Complete the observable after receiving the first value
-    );
-  }
-
-  getItemsInRoom(roomLocation: string): Observable<Item[]> {
-    const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
-    return from(getDocs(itemsRef)).pipe(
-      map((querySnapshot) =>
-        querySnapshot.docs.map((docSnapshot) => {
-          const data = docSnapshot.data();
-          return {
-            name: data['name'],
-            description: data['description'],
-            isPickedUp: data['isPickedUp'],
-          } as Item;
-        })
-      )
-    );
-  }
-
-  // New method to get the document ID by characterId
+  
+    // New method to get the document ID by characterId
   async getDocumentIdByCharacterId(characterId: string): Promise<string | null> {
     const characterQuery = query(collection(this.db, 'characters'), where('characterId', '==', characterId));
     const querySnapshot = await getDocs(characterQuery);
@@ -129,42 +105,7 @@ export class RoomsService {
     return null; // Return null if no document found
   }
 
-  // Method to pick up an item
-  async pickUpItem(characterDocId: string, itemId: string, hand: 'leftHand' | 'rightHand'): Promise<void> {
-    const characterRef = doc(this.db, 'characters', characterDocId);
-    const itemRef = doc(this.db, 'items', itemId);
-
-    console.log("Character Document ID:", characterDocId); // Debugging
-
-    const characterSnap = await getDoc(characterRef);
-    const itemSnap = await getDoc(itemRef);
-
-    console.log("Character Snapshot Exists:", characterSnap.exists()); // Debugging
-    console.log("Item Snapshot Exists:", itemSnap.exists()); // Debugging
-
-    if (characterSnap.exists() && itemSnap.exists()) {
-      const characterData = characterSnap.data() as Characters;
-      const itemData = itemSnap.data();
-
-      console.log("Character Data:", characterData); // Debugging
-      console.log("Item Data:", itemData); // Debugging
-      console.log("Hand to use:", hand); // Debugging
-      console.log("Is hand empty?", !characterData[hand]); // Debugging
-      console.log("Is item picked up?", !itemData['isPickedUp']); // Debugging
-
-      if (!characterData[hand] && !itemData['isPickedUp']) {
-        await updateDoc(characterRef, { [hand]: itemId });
-        await updateDoc(itemRef, { isPickedUp: true, owner: characterDocId });
-
-        this.textFeedService.addMessage(`You picked up the ${itemData['name']}.`);
-      } else {
-        this.textFeedService.addMessage(`Your hands are full or the item is not available.`);
-      }
-    } else {
-      this.textFeedService.addMessage(`Character or item not found.`);
-    }
-  }
-
+  
   async getCharacterHands(characterId: string): Promise<{ leftHand: string | null, rightHand: string | null }> {
     const characterDocId = await this.getDocumentIdByCharacterId(characterId);
     if (!characterDocId) {
@@ -185,33 +126,7 @@ export class RoomsService {
     return { leftHand: null, rightHand: null };
   }
 
-  async dropItem(characterDocId: string, hand: 'leftHand' | 'rightHand', roomLocation: string): Promise<void> {
-    // Reference to the character document
-    const characterRef = doc(this.db, 'characters', characterDocId);
-
-    // Get current data of the character
-    const characterSnap = await getDoc(characterRef);
-    if (!characterSnap.exists()) {
-      throw new Error("Character not found.");
-    }
-
-    const characterData = characterSnap.data() as Characters;
-    const itemId = characterData[hand];
-    if (!itemId) {
-      throw new Error("No item in the specified hand.");
-    }
-
-    // Reference to the item document
-    const itemRef = doc(this.db, 'items', itemId);
-
-    // Update the character document to remove the item from the hand
-    await updateDoc(characterRef, { [hand]: null });
-
-    // Update the item document to set its new location and clear the owner
-    await updateDoc(itemRef, { location: roomLocation, isPickedUp: false, owner: null });
-
-    this.textFeedService.addMessage(`You dropped the item.`);
-  }
+  
 
   getRoomName(): Observable<string> {
     return this.currentRoomName.asObservable();
@@ -222,7 +137,7 @@ export class RoomsService {
   }
   // Method to update room items
   updateRoomItems(location: string): void {
-    this.getItemsInRoom(location).subscribe(items => {
+    this.itemsService.getItemsInRoom(location).subscribe(items => {
       this.currentRoomItems.next(items.filter(item => !item.isPickedUp));
     });
   }

@@ -1,6 +1,7 @@
 // item.model.ts
 
 export interface Item {
+    id?: string;
     description: string;
     isPickedUp: boolean;
     itemId: string;

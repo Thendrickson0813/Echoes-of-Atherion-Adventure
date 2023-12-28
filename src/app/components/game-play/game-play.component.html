@@ -17,20 +17,38 @@
         </div>
 
         <!-- CENTER PANEL Game veiwer -->
-        <div class="col-md-8 h-100">
-            <div id="roomDescriptionViewer">
-                <p class="room-name-header">{{ roomName }}</p>
-                <p class="text-push" [innerHTML]="roomDescription + ' ' + itemListAsString"></p>
-                <p class="text-push" [innerHTML]=" ' ' + characterListAsString + '' "></p>
-            </div>
+        <div class="col-md-8 h-100 center-main">
             <div class="feed">
+                <div id="roomDescriptionViewer">
+                    <div class="room-name-header">{{ roomName }}</div>
+                    <p class="text-push" [innerHTML]="roomDescription + ' ' + itemListAsString"></p>
+                    <p class="text-push" [innerHTML]=" ' ' + characterListAsString + '' "></p>
+                    
+                </div>
                 <!-- game-play.component.html -->
-                <div class="message-container" #messageContainer>
+                <div class="message-container no-scrollbar" #messageContainer>
                     <p class="feed-message" *ngFor="let message of textFeedService.getTextFeedChangeObservable() | async" [innerHTML]="message"></p>
-
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-9">
+                    <form (ngSubmit)="onSubmit()" class="media-hide">
+                        <div class="container" tabindex="0" (keydown)="handleKeypadNavigation($event)">
+                            <input type="text" class="form-control" placeholder="Type here..." [(ngModel)]="userInput" (keydown.arrowUp)="handleArrowKey('up')" (keydown.arrowDown)="handleArrowKey('down')" autocomplete="off" name="userInput">
+                        </div>
+                    </form>
+                </div>
+                <div class="col-3">
+                    <div class="button-control">
+                        <button class="btn-black" (click)="move('up')">North</button>
+                        <button class="btn-black" (click)="move('down')">South</button>
+                        <button class="btn-black" (click)="move('left')">West</button>
+                        <button class="btn-black" (click)="move('right')">East</button>
+                    </div>
                 </div>
             </div>
         </div>
+
         <!-- Right Panel  -->
         <div class="col-md-2 right-ui-panel">
             <div class="">
@@ -47,30 +65,7 @@
             </div>
         </div>
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-3 text-end">
-                    <div class="button-control">
-                        <button class="btn-black" (click)="move('up')">North</button>
-                        <button class="btn-black" (click)="move('down')">South</button>
-                        <button class="btn-black" (click)="move('right')">East</button>
-                        <button class="btn-black" (click)="move('left')">West</button>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <form (ngSubmit)="onSubmit()" class="media-hide">
-                        <div class="container" tabindex="0" (keydown)="handleKeypadNavigation($event)">
-                            <input type="text" class="form-control" placeholder="Type here..." 
-                                   [(ngModel)]="userInput"
-                                   (keydown.arrowUp)="handleArrowKey('up')" 
-                                   (keydown.arrowDown)="handleArrowKey('down')"
-                                   autocomplete="off" 
-                                   (keydown.enter)="onSubmit()" 
-                                   name="userInput">
-                          </div>
-                    </form>
-                </div>
-                <div class="col-3"></div>
-            </div>
+
         </div>
     </div>
 </div>

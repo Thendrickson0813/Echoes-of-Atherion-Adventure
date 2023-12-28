@@ -43,10 +43,6 @@ body {
   }
 }
 
-.feed-message {
-  padding: 0px 30px;
-}
-
 .item-list {
   margin-top: 2px;
   /* Adjust as needed */
@@ -56,22 +52,28 @@ body {
 }
 
 .room-name-header {
-  font-size: 20px;
-  background-color: rgb(70, 87, 238);
+  font-size: 1.6em;
+  background-color: rgb(38, 118, 248);
   /* Example blue background */
-  color: white;
-  /* Example text color */
-  padding: 5px 30px;
-  /* Padding for spacing */
+  color: rgb(255, 255, 255);
   margin-bottom: 0;
   /* Remove bottom margin to avoid extra line spacing */
-  border: solid 1px rgb(21, 62, 208);
-  box-shadow: 0 5px 8px rgb(0, 0, 97);
+  box-shadow: 0 5px 8px rgb(1, 55, 181);
   /* Larger box-shadow on hover/focus for 3D effect */
-  border-radius: 10px;
   margin-bottom: 10px;
 }
-
+.feed-message p, .room-name-header, .roomDescriptionViewer p, .text-push
+{
+  padding: 2px 30px;
+}
+p.text-push {
+  font-size: 1.2em;
+  margin: 0px;
+  padding-top: 0px;
+}
+span.description-item-name {
+  font-style: italic;
+}
 // Inside styles.scss
 input[type="email"],
 input[type="password"] {
@@ -141,3 +143,4 @@ input[type="password"] {
   background-color: black;
   color: white;
 }
+
