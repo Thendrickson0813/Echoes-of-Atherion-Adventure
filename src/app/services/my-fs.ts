@@ -8,7 +8,9 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
   getDocs,
-  QuerySnapshot
+  QuerySnapshot,
+  doc,
+  updateDoc
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { Observable, from } from 'rxjs';
@@ -68,5 +70,10 @@ export class MyFs {
   }
   return null; // Return null if no document found
 }
+updateCharacterOnlineStatus(characterId: string, isOnline: boolean): Promise<void> {
+  const characterRef = doc(this.db, 'characters', characterId);
+  return updateDoc(characterRef, { isOnline });
+}
+
   // Additional methods for updating, deleting, etc.
 }

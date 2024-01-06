@@ -54,29 +54,28 @@ export class CharacterListComponent implements OnInit {
   onSelectCharacter(character: any): void {
     if (character && character.characterName) {
       console.log('Selected character:', character);
-
+  
+      // Existing logic for setting the selected character
       this.selectedCharacter = character;
       this.gameStateService.setSelectedCharacter(character);
       this.gameStateService.setSelectedCharacterId(character.characterId);
       this.gameStateService.setSelectedCharacterFirestoreDocumentId(character.documentId);
+  
+      // Update the character's online status
+      this.myFs.updateCharacterOnlineStatus(character.documentId, true)
+        .then(() => {
+          console.log(`Character ${character.characterName} set as online.`);
+        })
+        .catch(error => {
+          console.error('Error setting character online status:', error);
+        });
 
-      // Log the stored values in GameStateService for verification
-      console.log('Stored character in GameStateService:', this.gameStateService.getSelectedCharacter());
-      console.log('Firestore Document ID:', character.documentId); // Log the Firestore Document ID
-      console.log('Stored character ID in GameStateService:', this.gameStateService.getSelectedCharacterId());
-      console.log('Stored character Name in GameStateService:', this.gameStateService.getSelectedCharacterName());
-      console.log('Stored character Location in GameStateService:', this.gameStateService.getSelectedCharacterLocation());
-      const characterLocation = this.gameStateService.getSelectedCharacterLocation();
-      if (characterLocation) {
-        console.log("CharacterListComponent: Updating location from onSelectCharacter");
-        this.roomsService.updateLocation(characterLocation);
-      } else {
-        console.error('Unable to retrieve character location');
-      }
+      // ... rest of the onSelectCharacter logic ...
     } else {
       console.error('Character name not found in the selected character');
     }
   }
+  
 
   playWithSelectedCharacter() {
     if (this.selectedCharacter) {

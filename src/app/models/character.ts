@@ -9,4 +9,5 @@ export interface Characters {
     location: string;
     rightHand?: string;
     userId: string;
+    isOnline: boolean;
 }

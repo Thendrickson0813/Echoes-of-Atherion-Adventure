@@ -39,6 +39,7 @@ export class CharacterCreationComponent {
         location: 'X1Y0',
         leftHand: null, // Initialize as null, meaning "empty hand"
         rightHand: null,
+        isOnline: false,
       };
 
       this.myFs.addData('characters', characterData)
@@ -53,4 +54,5 @@ export class CharacterCreationComponent {
       console.log('Form is not valid');
     }
   }
+  
 }

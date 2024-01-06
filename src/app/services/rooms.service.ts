@@ -61,7 +61,11 @@ export class RoomsService {
   }
 
   listenToRoomCharacters(roomLocation: string): void {
-    const charactersRef = query(collection(this.db, 'characters'), where('location', '==', roomLocation));
+    const charactersRef = query(
+      collection(this.db, 'characters'),
+      where('location', '==', roomLocation),
+      where('isOnline', '==', true) // Only get characters that are online
+    );
 
     // Correctly assign the unsubscribe function
     this.unsubscribeRoomCharacters = onSnapshot(charactersRef, (querySnapshot: QuerySnapshot) => {

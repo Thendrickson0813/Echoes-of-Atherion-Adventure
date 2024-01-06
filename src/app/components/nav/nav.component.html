@@ -19,6 +19,8 @@
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <button (click)="logoutCharacter()">Change Character</button>
+
                 <li class="custom-button nav-item" *ngIf="(authService.user$ | async) && !isLoginRoute">
                     <a class="btn-black" (click)="signOut()">Logout</a>
                 </li>

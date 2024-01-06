@@ -4,6 +4,7 @@ import { AuthService } from '../../services/auth.service';
 import { GameStateService } from '../../services/game-state.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { MyFs } from 'src/app/services/my-fs';
 
 @Component({
   selector: 'app-navbar',
@@ -17,7 +18,9 @@ export class NavComponent {
   constructor(
     public authService: AuthService, 
     private router: Router,
-    private gameStateService: GameStateService // Inject the GameStateService
+    private gameStateService: GameStateService, // Inject the GameStateService
+    private myFsService: MyFs,
+    
   ) {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -34,5 +37,23 @@ export class NavComponent {
       this.router.navigate(['/login']);
     });
   }
+  logoutCharacter() {
+    // Call getSelectedCharacterId as a method
+    const characterId = this.gameStateService.getSelectedCharacterFirestoreDocumentId();
+  
+    if (characterId) {
+      this.myFsService.updateCharacterOnlineStatus(characterId, false)
+        .then(() => {
+          console.log('Character successfully logged out');
+          // Additional logic if needed after character logout
+        })
+        .catch(error => {
+          console.error('Error logging out character:', error);
+        });
+    } else {
+      console.error('No character ID available for logout');
+    }
+  }
+  
 }
 
