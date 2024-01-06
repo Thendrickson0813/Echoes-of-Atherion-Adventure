@@ -46,6 +46,7 @@ export class NavComponent {
         .then(() => {
           console.log('Character successfully logged out');
           // Additional logic if needed after character logout
+          this.router.navigate(['/character-list']); // Navigate to character list
         })
         .catch(error => {
           console.error('Error logging out character:', error);
