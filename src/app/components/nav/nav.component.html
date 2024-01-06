@@ -3,18 +3,29 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="/splash-screen">Echoes of Atherion: <span>War of the Virulent</span></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-</button>
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <span class="nav-link-character" *ngIf="characterName">{{ characterName }}</span>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <!-- Left aligned items (if any) -->
+            </ul>
+            <!-- Centered character name -->
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="custom-button nav-item" *ngIf="(authService.user$ | async) && !isLoginRoute">
                     <a class="btn-black" (click)="signOut()">Logout</a>
                 </li>
                 <li class="nav-item" *ngIf="!(authService.user$ | async) && !isLoginRoute">
                     <a class="nav-link" [routerLink]="['/login']">Login</a>
                 </li>
+                <!-- Right aligned items -->
             </ul>
         </div>
     </div>

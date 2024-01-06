@@ -1,5 +1,5 @@
 // game-play.component.ts
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
 import { MovementService } from '../../services/movement.service';
 import { TextFeedService } from '../../services/text-feed.service';
 import { RoomsService } from '../../services/rooms.service';
@@ -17,7 +17,7 @@ import { firstValueFrom } from 'rxjs';
   templateUrl: './game-play.component.html',
   styleUrls: ['./game-play.component.scss']
 })
-export class GamePlayComponent implements OnInit, AfterViewInit {
+export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
   currentLocation: string | null = null;  // Allow null
   gameStateLocation: string | null = null; // Allow null
   isDetailsVisible: boolean = true; // Add this
@@ -30,7 +30,7 @@ export class GamePlayComponent implements OnInit, AfterViewInit {
   currentCharacterId: string | null = null;  // Add this line to declare the property
   currentHistoryIndex: number = -1; // Start at -1
   inputHistory: string[] = [];
-
+  characterName: string | null = null;
   @ViewChild('messageContainer') private messageContainer!: ElementRef;
 
 
@@ -82,7 +82,12 @@ export class GamePlayComponent implements OnInit, AfterViewInit {
     this.roomsService.getRoomName().subscribe(name => {
       this.roomName = name;
     });
-
+    this.characterService.getLocation().subscribe((newLocation: string | null) => {
+      if (newLocation && this.currentLocation !== newLocation) {
+        this.currentLocation = newLocation;
+        this.roomsService.updateLocation(newLocation);
+      }
+    });
     this.roomsService.getRoomDescription().subscribe(description => {
       this.roomDescription = description;
     });
@@ -92,6 +97,7 @@ export class GamePlayComponent implements OnInit, AfterViewInit {
     });
     // Subscribe to room characters
     this.roomsService.getRoomCharacters().subscribe(characters => {
+      console.log('Room characters updated:', characters);
       // Filter out the current character
       this.roomCharacters = characters.filter(character => character.characterId !== this.currentCharacterId);
     });
@@ -99,7 +105,14 @@ export class GamePlayComponent implements OnInit, AfterViewInit {
     this.textFeedService.getTextFeedChangeObservable().subscribe(() => {
       this.scrollToBottom();
     });
+    this.characterName = this.gameStateService.getSelectedCharacterName();
 
+
+  }
+  ngOnDestroy() {
+    // Unsubscribe from room-related observables
+    // This will call the unsubscribe methods in the RoomsService
+    this.roomsService.cleanupListeners();
   }
 
   ngAfterViewInit() {

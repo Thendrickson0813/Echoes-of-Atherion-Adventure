@@ -1,3 +1,4 @@
+// rooms.service.ts
 import { Injectable } from '@angular/core';
 import { collection, query, where, getFirestore, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Observable, from } from 'rxjs';
@@ -21,16 +22,33 @@ export class RoomsService {
   private currentRoomDescription = new BehaviorSubject<string>('');
   private currentRoomItems = new BehaviorSubject<Item[]>([]);
   private currentRoomCharacters = new BehaviorSubject<Characters[]>([]);
+  // Unsubscribe functions
+  // Initialize unsubscribe functions to null and allow them to be null
+  private unsubscribeRoomItems: (() => void) | null = null;
+  private unsubscribeRoomCharacters: (() => void) | null = null;
 
   constructor(
     private textFeedService: TextFeedService,
     private itemsService: ItemsService
-    ) { }
+  ) { }
+
+  private unsubscribeFromRoomItems(): void {
+    if (this.unsubscribeRoomItems) {
+      this.unsubscribeRoomItems();
+    }
+  }
+
+  private unsubscribeFromRoomCharacters(): void {
+    if (this.unsubscribeRoomCharacters) {
+      this.unsubscribeRoomCharacters();
+    }
+  }
 
   listenToRoomItems(roomLocation: string): void {
     const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
 
-    onSnapshot(itemsRef, (querySnapshot: QuerySnapshot) => {
+    // Assign the unsubscribe function returned by onSnapshot directly to this.unsubscribeRoomItems
+    this.unsubscribeRoomItems = onSnapshot(itemsRef, (querySnapshot: QuerySnapshot) => {
       const items: Item[] = [];
       querySnapshot.forEach((doc) => {
         const item = doc.data() as Item;
@@ -41,18 +59,24 @@ export class RoomsService {
       this.currentRoomItems.next(items);
     });
   }
+
   listenToRoomCharacters(roomLocation: string): void {
     const charactersRef = query(collection(this.db, 'characters'), where('location', '==', roomLocation));
 
-    onSnapshot(charactersRef, (querySnapshot: QuerySnapshot) => {
+    // Correctly assign the unsubscribe function
+    this.unsubscribeRoomCharacters = onSnapshot(charactersRef, (querySnapshot: QuerySnapshot) => {
+      console.log('Characters snapshot received for location:', roomLocation);
+
       const characters: Characters[] = [];
       querySnapshot.forEach((doc) => {
         const character = doc.data() as Characters;
         characters.push(character);
       });
       this.currentRoomCharacters.next(characters);
+      console.log('Updated characters:', characters);
     });
   }
+
   async updateLocation(location: string): Promise<void> {
     if (this.currentLocation === location) {
       this.listenToRoomItems(location);
@@ -82,6 +106,10 @@ export class RoomsService {
     }
     this.listenToRoomItems(location);
   }
+  cleanupListeners() {
+    this.unsubscribeFromRoomItems();
+    this.unsubscribeFromRoomCharacters();
+  }
 
   async isValidRoom(location: string): Promise<boolean> {
     try {
@@ -93,8 +121,8 @@ export class RoomsService {
       return false;
     }
   }
-  
-    // New method to get the document ID by characterId
+
+  // New method to get the document ID by characterId
   async getDocumentIdByCharacterId(characterId: string): Promise<string | null> {
     const characterQuery = query(collection(this.db, 'characters'), where('characterId', '==', characterId));
     const querySnapshot = await getDocs(characterQuery);
@@ -105,7 +133,7 @@ export class RoomsService {
     return null; // Return null if no document found
   }
 
-  
+
   async getCharacterHands(characterId: string): Promise<{ leftHand: string | null, rightHand: string | null }> {
     const characterDocId = await this.getDocumentIdByCharacterId(characterId);
     if (!characterDocId) {
@@ -126,8 +154,23 @@ export class RoomsService {
     return { leftHand: null, rightHand: null };
   }
 
-  
+  // Method to subscribe to a room
+  subscribeToRoom(roomLocation: string): void {
+    this.listenToRoomItems(roomLocation);
+    this.listenToRoomCharacters(roomLocation);
+  }
 
+  // Method to unsubscribe from a room
+  unsubscribeFromRoom(roomLocation: string): void {
+    if (this.unsubscribeRoomItems) {
+      this.unsubscribeRoomItems();
+      this.unsubscribeRoomItems = null;
+    }
+    if (this.unsubscribeRoomCharacters) {
+      this.unsubscribeRoomCharacters();
+      this.unsubscribeRoomCharacters = null;
+    }
+  }
   getRoomName(): Observable<string> {
     return this.currentRoomName.asObservable();
   }
