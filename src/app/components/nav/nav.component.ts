@@ -4,7 +4,7 @@ import { AuthService } from '../../services/auth.service';
 import { GameStateService } from '../../services/game-state.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { MyFs } from 'src/app/services/my-fs';
+import { MyFsService } from 'src/app/services/my-fs';
 
 @Component({
   selector: 'app-navbar',
@@ -19,7 +19,7 @@ export class NavComponent {
     public authService: AuthService, 
     private router: Router,
     private gameStateService: GameStateService, // Inject the GameStateService
-    private myFsService: MyFs,
+    private myFsService: MyFsService,
     
   ) {
     this.router.events.pipe(

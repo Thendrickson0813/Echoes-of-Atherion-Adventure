@@ -1,17 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  query,
-  where,
-  QueryDocumentSnapshot,
-  DocumentData,
-  getDocs,
-  QuerySnapshot,
-  doc,
-  updateDoc
-} from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, QueryDocumentSnapshot, DocumentData, getDocs, QuerySnapshot, doc, updateDoc} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -19,7 +7,7 @@ import { map } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root',
 })
-export class MyFs {
+export class MyFsService {
   private db = getFirestore();
   private auth = getAuth();
 
@@ -60,20 +48,20 @@ export class MyFs {
       )
     );
   }
- // New method to get the document ID by characterId
- async getDocumentIdByCharacterId(characterId: string): Promise<string | null> {
-  const characterQuery = query(collection(this.db, 'characters'), where('characterId', '==', characterId));
-  const querySnapshot = await getDocs(characterQuery);
+  // New method to get the document ID by characterId
+  async getDocumentIdByCharacterId(characterId: string): Promise<string | null> {
+    const characterQuery = query(collection(this.db, 'characters'), where('characterId', '==', characterId));
+    const querySnapshot = await getDocs(characterQuery);
 
-  if (!querySnapshot.empty) {
-    return querySnapshot.docs[0].id; // Return the first document's ID
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].id; // Return the first document's ID
+    }
+    return null; // Return null if no document found
   }
-  return null; // Return null if no document found
-}
-updateCharacterOnlineStatus(characterId: string, isOnline: boolean): Promise<void> {
-  const characterRef = doc(this.db, 'characters', characterId);
-  return updateDoc(characterRef, { isOnline });
-}
+  updateCharacterOnlineStatus(characterId: string, isOnline: boolean): Promise<void> {
+    const characterRef = doc(this.db, 'characters', characterId);
+    return updateDoc(characterRef, { isOnline });
+  }
 
   // Additional methods for updating, deleting, etc.
 }

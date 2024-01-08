@@ -1,6 +1,6 @@
 // CharacterListComponent
 import { Component, OnInit } from '@angular/core';
-import { MyFs } from 'src/app/services/my-fs';
+import { MyFsService } from 'src/app/services/my-fs';
 import { AuthService } from 'src/app/services/auth.service';
 import { GameStateService } from 'src/app/services/game-state.service';
 import { Router } from '@angular/router';
@@ -20,7 +20,7 @@ export class CharacterListComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private myFs: MyFs,
+    private myFsService: MyFsService,
     private gameStateService: GameStateService,
     private roomsService: RoomsService,
     private router: Router
@@ -41,7 +41,7 @@ export class CharacterListComponent implements OnInit {
     if (this.userId) {
       console.log('character-list Calling getCharactersByUserId method');
 
-      this.myFs.getCharactersByUserId(this.userId).subscribe(characters => {
+      this.myFsService.getCharactersByUserId(this.userId).subscribe(characters => {
         console.log('character-list Received characters from getCharactersByUserId:', characters);
 
         this.characters = characters;
@@ -62,7 +62,7 @@ export class CharacterListComponent implements OnInit {
       this.gameStateService.setSelectedCharacterFirestoreDocumentId(character.documentId);
   
       // Update the character's online status
-      this.myFs.updateCharacterOnlineStatus(character.documentId, true)
+      this.myFsService.updateCharacterOnlineStatus(character.documentId, true)
         .then(() => {
           console.log(`Character ${character.characterName} set as online.`);
         })

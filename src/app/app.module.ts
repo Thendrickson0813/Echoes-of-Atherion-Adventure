@@ -21,7 +21,8 @@ import { SplashScreenComponent } from './components/splash-screen/splash-screen.
 
 import { RegisterComponent } from './components/register/register.component';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
-import { MyFs } from './services/my-fs';
+import { MyFsService } from './services/my-fs';
+import { CharacterActivityService } from './services/character-activity.service';
 import { CharacterListComponent } from './components/character-list/character-list.component';
 import { DataService } from './services/data.service';
 import { LocationUpdateService } from './services/location-update-fire.service';
@@ -56,9 +57,10 @@ import { InteractiveWindowComponent } from './components/interactive-window/inte
     FormsModule,
   ],
   providers: [
-    MyFs,
+    MyFsService,
     LocationUpdateService,
     DataService,
+    CharacterActivityService,
   ],
   bootstrap: [AppComponent]
 })

@@ -1,7 +1,7 @@
 // character-creation.component.ts
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MyFs } from 'src/app/services/my-fs';
+import { MyFsService } from 'src/app/services/my-fs';
 import { v4 as uuidv4 } from 'uuid'; // Import uuid
 import { Router } from '@angular/router'; // Import Router
 
@@ -15,7 +15,7 @@ export class CharacterCreationComponent {
 
   constructor(
     private fb: FormBuilder,
-    private myFs: MyFs, // Injecting Firestore Service
+    private myFs: MyFsService, // Injecting Firestore Service
     private router: Router // Injecting Router Service
   ) {
     this.createForm();
