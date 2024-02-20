@@ -11,9 +11,9 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
-exports.checkForInactiveCharacters = functions.pubsub.schedule('every 45 minutes').onRun(async (context) => {
+exports.checkForInactiveCharacters = functions.pubsub.schedule('every 30 minutes').onRun(async (context) => {
   const now = admin.firestore.Timestamp.now();
-  const thresholdSeconds = 30 * 60; // 30 minutes
+  const thresholdSeconds = 20 * 60; // 30 minutes
   const thresholdMillis = now.toMillis() - thresholdSeconds * 1000;
   const thresholdTimestamp = admin.firestore.Timestamp.fromMillis(thresholdMillis);
 
