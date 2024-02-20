@@ -67,5 +67,6 @@ export class EventManagementService {
     );
   }
 
+ 
   // Additional methods for querying, updating, or other event-related logic can be added here
 }
