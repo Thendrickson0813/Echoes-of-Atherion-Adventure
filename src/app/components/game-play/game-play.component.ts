@@ -1,5 +1,6 @@
 // game-play.component.ts
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { MovementService } from '../../services/movement.service';
 import { TextFeedService } from '../../services/text-feed.service';
 import { RoomsService } from '../../services/rooms.service';
@@ -11,6 +12,7 @@ import { Item } from 'src/app/models/item';
 import { ItemsService } from 'src/app/services/items.service';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { GameEvent } from 'src/app/models/game-event.model';
 
 
 
@@ -34,6 +36,7 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
   inputHistory: string[] = [];
   characterName: string | null = null;
   @ViewChild('messageContainer') private messageContainer!: ElementRef;
+  private roomEventsSubscription!: Subscription; 
 
 
   constructor(
@@ -49,6 +52,7 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {
     // Subscribe to character location updates
     this.characterService.getLocation().subscribe((location: string | null) => {
+      console.log('GamePlayComponent: subscribing to getLocation in CharacterService')
       if (location) {
         this.currentLocation = location;
         this.roomsService.updateLocation(location);
@@ -82,54 +86,111 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     const characterInitialLocation = this.gameStateService.getSelectedCharacterLocation();
     if (characterInitialLocation) {
       this.roomsService.updateLocation(characterInitialLocation);
+      this.roomsService.listenToRoomEvents(characterInitialLocation); // Start listening to events in the initial room
     } else {
       console.error('Unable to retrieve character initial location');
     }
+
     this.roomsService.getRoomName().subscribe(name => {
       this.roomName = name;
+      console.log('GamePlayComponent: Subscribed to room name');
     });
+
     this.characterService.getLocation().subscribe((newLocation: string | null) => {
+      console.log('GamePlayComponent: Subscribed to new location from CharacterService');
       if (newLocation && this.currentLocation !== newLocation) {
         this.currentLocation = newLocation;
         this.roomsService.updateLocation(newLocation);
       }
     });
+
     this.roomsService.getRoomDescription().subscribe(description => {
       this.roomDescription = description;
+      console.log('GamePlayComponent: Subscribed to room description');
     });
+
     // Subscribe to room items
     this.roomsService.getRoomItems().subscribe(items => {
       this.roomItems = items;
+      console.log('GamePlayComponent: Subscribed to room items');
     });
+
     // Subscribe to room characters
     this.roomsService.getRoomCharacters().subscribe(characters => {
-      console.log('Room characters updated:', characters);
-      // Filter out the current character
+      console.log('GamePlayComponent: Subscribed to room characters');
       this.roomCharacters = characters.filter(character => character.characterId !== this.currentCharacterId);
     });
+
     // Subscribe to the text feed changes
     this.textFeedService.getTextFeedChangeObservable().subscribe(() => {
       this.scrollToBottom();
+      console.log('GamePlayComponent: Subscribed to text feed changes');
     });
+
     const selectedCharacterFirestoreDocumentId = this.gameStateService.getSelectedCharacterFirestoreDocumentId();
     if (selectedCharacterFirestoreDocumentId) {
-      this.characterActivityService.setCharacterId(selectedCharacterFirestoreDocumentId); //Fetches the selected character's Firestore document ID
-      this.characterActivityService.subscribeToCharacterOnlineStatus(isOnline => { // Subscribes to updates in the character's online status using
-        if (!isOnline) { // Within the subscription, checks if isOnline is false
+      this.characterActivityService.setCharacterId(selectedCharacterFirestoreDocumentId);
+      this.characterActivityService.subscribeToCharacterOnlineStatus(isOnline => {
+        console.log('GamePlayComponent: Subscribed to character online status');
+        if (!isOnline) {
           console.log('Character is offline due to inactivity');
-          this.router.navigate(['/character-list']); // Redirect to character list
-          // Handle the character going offline
+          this.router.navigate(['/character-list']);
         }
       });
     } else {
       console.error('No Firestore Document ID found for the selected character');
     }
+
+    this.roomsService.getRoomEvents().subscribe(event => {
+      console.log("GamePlayComponent: Subscribed to room events");
+      console.log("Event received:", event);
+      if (event && event.type === 'itemPickup') {
+        this.handleItemPickupEvent(event);
+      }
+    });
+
+    this.roomEventsSubscription = this.roomsService.getRoomEvents().subscribe(event => {
+      console.log("GamePlayComponent: Subscribed to room events (roomEventsSubscription)");
+      if (event) {
+        console.log("Event received:", event);
+        switch (event.type) {
+          case 'itemPickup':
+            if (event.details) {
+              this.textFeedService.addMessage(`${event.details.characterName} picked up ${event.details.itemName}.`);
+            }
+            break;
+          // Handle other event types...
+        }
+      }
+    });
   }
 
-    ngOnDestroy() {
+  
+  ngOnDestroy() {
+    console.log('GamePlayComponent: ngOnDestroy called');
+
     // Unsubscribe from room-related observables
-    // This will call the unsubscribe methods in the RoomsService
+    console.log('GamePlayComponent: Cleaning up listeners');
     this.roomsService.cleanupListeners();
+
+    if (this.roomEventsSubscription) {
+        console.log('GamePlayComponent: Unsubscribing from roomEventsSubscription');
+        this.roomEventsSubscription.unsubscribe();
+    } else {
+        console.log('GamePlayComponent: No roomEventsSubscription to unsubscribe');
+    }
+
+    // You can add more console.log statements here if you have other clean-up tasks
+}
+
+  
+
+  private handleItemPickupEvent(event: GameEvent) {
+    // Implementation to handle item pickup event
+    // For example:
+    if (event.details) {
+      this.textFeedService.addMessage(`${event.details.characterName} picked up ${event.details.itemName}.`);
+    }
   }
 
   ngAfterViewInit() {
@@ -243,6 +304,7 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.textFeedService.addMessage(`You picked up the ${itemName}.`);
     } catch (error) {
       console.error('Failed to pick up item:', error);
+      this.removePickedUpItemFromLocalState(itemName);
       if (error instanceof Error) {
         this.textFeedService.addMessage(error.message);
       } else {
@@ -250,7 +312,9 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
   }
-
+  private removePickedUpItemFromLocalState(itemName: string) {
+    this.roomItems = this.roomItems.filter(item => item.name !== itemName);
+  }
 
 
   // Inside GamePlayComponent
@@ -293,7 +357,6 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     // Now proceed to drop the item using its name
     try {
       await this.itemsService.dropItem(firestoreCharacterDocId, itemName, hand, currentLocation);
-      this.textFeedService.addMessage(`Item dropped successfully.`);
     } catch (error) {
       console.error('Error dropping item:', error);
       if (error instanceof Error) {
@@ -311,7 +374,6 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
 
   async onSubmit() {
     console.log('onSubmit called');
-    console.log('Form submitted');
     const trimmedInput = this.userInput.trim().toLowerCase();
 
     if (!trimmedInput) {

@@ -62,13 +62,16 @@ export class MovementService {
     if (isValidMove) {
       // Unsubscribe from the current room before moving
       this.roomsService.unsubscribeFromRoom(this.currentLocation);
-  
+      console.log('movementService: Move Function is Unsubscribing from the current room before moving using unsubscribeFromRoom');
+
       // Update new location
       this.currentX = newX;
       this.currentY = newY;
   
       // Subscribe to new room after moving
       this.roomsService.subscribeToRoom(newLocation);
+      console.log('movementService: Move Function is Subscribing to new room after moving using subscribeToRoom');
+
   
       // Update location in other services
       this.characterService.setLocation(newLocation);

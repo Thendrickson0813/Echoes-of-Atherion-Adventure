@@ -26,7 +26,6 @@ import { CharacterActivityService } from './services/character-activity.service'
 import { CharacterListComponent } from './components/character-list/character-list.component';
 import { DataService } from './services/data.service';
 import { LocationUpdateService } from './services/location-update-fire.service';
-import { EventManagementService } from './services/event-management.service';
 import { FormsModule } from '@angular/forms';
 import { InteractiveWindowComponent } from './components/interactive-window/interactive-window.component';
 

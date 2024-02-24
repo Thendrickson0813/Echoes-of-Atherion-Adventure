@@ -1,6 +1,6 @@
 // rooms.service.ts
 import { Injectable } from '@angular/core';
-import { collection, query, where, getFirestore, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { serverTimestamp, collection, query, where, getFirestore, getDocs, doc, updateDoc, getDoc, onSnapshot, QuerySnapshot, Timestamp } from 'firebase/firestore';
 import { Observable, from } from 'rxjs';
 import { map, first } from 'rxjs/operators';
 import { TextFeedService } from './text-feed.service';
@@ -8,8 +8,8 @@ import { BehaviorSubject } from 'rxjs';
 import { Room } from '../models/locations'; // Ensure this is the correct path
 import { Item } from '../models/item';
 import { Characters } from '../models/character';
-import { onSnapshot, QuerySnapshot } from 'firebase/firestore';
 import { ItemsService } from './items.service';
+import { GameEvent } from '../models/game-event.model';
 
 
 @Injectable({
@@ -26,6 +26,8 @@ export class RoomsService {
   // Initialize unsubscribe functions to null and allow them to be null
   private unsubscribeRoomItems: (() => void) | null = null;
   private unsubscribeRoomCharacters: (() => void) | null = null;
+
+  private roomEventsSubject = new BehaviorSubject<GameEvent | null>(null);
 
   constructor(
     private textFeedService: TextFeedService,
@@ -44,21 +46,60 @@ export class RoomsService {
     }
   }
 
+  private lastProcessedUpdates = new Map<string, number>();
+  private isNewUpdate(itemId: string, lastUpdated: Timestamp): boolean {
+    const lastProcessedTime = this.lastProcessedUpdates.get(itemId);
+    return !lastProcessedTime || lastUpdated.seconds > lastProcessedTime;
+  }
   listenToRoomItems(roomLocation: string): void {
+    console.log(`RoomService:Funtion listenToRoomItems is being called Listening to items in room: ${roomLocation}`);
     const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
-
-    // Assign the unsubscribe function returned by onSnapshot directly to this.unsubscribeRoomItems
+  
     this.unsubscribeRoomItems = onSnapshot(itemsRef, (querySnapshot: QuerySnapshot) => {
+      console.log(`Received query snapshot for room: ${roomLocation}`);
       const items: Item[] = [];
       querySnapshot.forEach((doc) => {
         const item = doc.data() as Item;
+        const itemId = doc.id; // Capture the document ID
         if (!item.isPickedUp) {
           items.push(item);
+        } else if (item.lastUpdated && itemId && this.isNewUpdate(itemId, item.lastUpdated)) {
+          // Ensure itemId is defined before calling isNewUpdate
+          this.broadcastItemPickup(item);
         }
       });
       this.currentRoomItems.next(items);
     });
   }
+  
+  private async broadcastItemPickup(item: Item): Promise<void> {
+    if (!item.owner) {
+      console.error('Item owner not available.');
+      return;
+    }
+  
+    try {
+      const firestore = getFirestore(); // Get Firestore instance
+      const ownerRef = doc(firestore, `characters/${item.owner}`); // Use the obtained Firestore instance
+      const ownerSnap = await getDoc(ownerRef);
+  
+      if (!ownerSnap.exists()) {
+        console.error('Owner character not found.');
+        return;
+      }
+  
+      const ownerData = ownerSnap.data();
+      const characterName = ownerData['characterName']; // Use bracket notation to access characterName
+  
+      const message = `${characterName} picked up ${item.name}.`;
+      this.textFeedService.addMessage(message);
+      console.log(message);
+  
+    } catch (error) {
+      console.error('Error fetching character name:', error);
+    }
+  }
+   
 
   listenToRoomCharacters(roomLocation: string): void {
     const charactersRef = query(
@@ -81,40 +122,94 @@ export class RoomsService {
     });
   }
 
-  async updateLocation(location: string): Promise<void> {
-    if (this.currentLocation === location) {
-      this.listenToRoomItems(location);
-      this.listenToRoomCharacters(location);
-      console.log('RoomsService: Location is the same as current. No update needed.');
-      return;
-    }
-
-    const roomRef = query(collection(this.db, 'locations'), where('location', '==', location));
-    const roomSnapshot = await getDocs(roomRef);
-
-    if (!roomSnapshot.empty) {
-      const roomData = roomSnapshot.docs[0].data() as Room;
-      this.currentLocation = location;
-      this.currentRoomName.next(roomData.name); // Update room name
-      this.currentRoomDescription.next(roomData.description); // Update room description
-      // Fetch items in the room
-      this.itemsService.getItemsInRoom(location).subscribe((items) => {
-        const visibleItems = items.filter(item => !item.isPickedUp).map(item => `<span class="item-name">${item.name}</span>`).join(', ');
-
-        // Format room entry message with room name, description, and visible items
-        const roomEntryMessage = `<div class="room-name-header">${roomData.name}</div><p class="feed-message"> ${roomData.description}${visibleItems.length > 0 ? ' You see ' + visibleItems : ''}</p>`;
-        this.textFeedService.addMessage(roomEntryMessage);
+  listenToRoomEvents(roomLocation: string): void {
+    const eventsRef = collection(this.db, `locations/${roomLocation}/events`);
+    console.log("Listening to room events for location:", roomLocation);
+    // Set up your Firestore listener here...
+    onSnapshot(eventsRef, (snapshot) => {
+      console.log("Snapshot received:", snapshot);
+      snapshot.docChanges().forEach((change) => {
+        console.log("Document change:", change);
+        if (change.type === 'added') {
+          const gameEvent = change.doc.data() as GameEvent;
+          console.log("New game event:", gameEvent);
+          this.roomEventsSubject.next(gameEvent);
+        }
       });
-    } else {
-      this.textFeedService.addMessage('You can\'t go that way.');
-    }
-    this.listenToRoomItems(location);
-  }
-  cleanupListeners() {
-    this.unsubscribeFromRoomItems();
-    this.unsubscribeFromRoomCharacters();
+    });
   }
 
+  getRoomEvents(): Observable<GameEvent | null> {
+    return this.roomEventsSubject.asObservable();
+  }
+  async updateLocation(location: string): Promise<void> {
+  // Unsubscribe from the current room's items and characters if the location is changing
+  if (this.currentLocation !== location) {
+    this.cleanupListeners();
+  }
+
+  const roomRef = query(collection(this.db, 'locations'), where('location', '==', location));
+  const roomSnapshot = await getDocs(roomRef);
+
+  if (!roomSnapshot.empty) {
+    const roomData = roomSnapshot.docs[0].data() as Room;
+    this.currentLocation = location;
+    this.currentRoomName.next(roomData.name); // Update room name
+    this.currentRoomDescription.next(roomData.description); // Update room description
+
+    // Fetch items in the room
+    this.itemsService.getItemsInRoom(location).subscribe((items) => {
+      const visibleItems = items.filter(item => !item.isPickedUp).map(item => `<span class="item-name">${item.name}</span>`).join(', ');
+      const roomEntryMessage = `<div class="room-name-header">${roomData.name}</div><p class="feed-message"> ${roomData.description}${visibleItems.length > 0 ? ' You see ' + visibleItems : ''}</p>`;
+      this.textFeedService.addMessage(roomEntryMessage);
+    });
+
+    // Subscribe to the new room's items and characters
+    this.listenToRoomItems(location);
+    console.log('RoomsService:Function Update Location Subscribing to Items using listenToRoomItems in RoomsService');
+    this.listenToRoomCharacters(location);
+    console.log('RoomsService: Function Update Location Subscribing to Rooma using listenToRoomCharacters in RoomsService');
+  } else {
+    this.textFeedService.addMessage('You can\'t go that way.');
+  }
+}
+
+  cleanupListeners() {
+    console.log('CleanupListeners');
+    this.unsubscribeFromRoomItems();
+    console.log('unsubscribeFromRoomItems');
+    this.unsubscribeFromRoomCharacters();
+    console.log('unsubscribeFromRoomCharacters');
+
+  }
+
+  // Method to subscribe to a room
+  subscribeToRoom(roomLocation: string): void {
+    console.log('RoomsService: Method subscribeToRoom was called')
+    this.listenToRoomItems(roomLocation);
+    console.log('Method subscribeToRoom using listenToRoomItems was called to subscribe to room');
+    this.listenToRoomCharacters(roomLocation);
+    console.log('RoomsService: Method subscribeToRoom using listenToRoom was called to subscribe to Characters');
+  }
+
+ // Method to unsubscribe from a room
+unsubscribeFromRoom(roomLocation: string): void {
+  console.log(`RoomsService: unsubscribeFromRoom called for roomLocation: ${roomLocation}`);
+
+  if (this.unsubscribeRoomItems) {
+    this.unsubscribeRoomItems();
+    console.log(`RoomsService: unsubscribeFromRoom - Unsubscribed from room items for roomLocation: ${roomLocation}`);
+    this.unsubscribeRoomItems = null;
+    console.log(`RoomsService: Cleared unsubscribeRoomItems reference for roomLocation: ${roomLocation}`);
+  }
+
+  if (this.unsubscribeRoomCharacters) {
+    this.unsubscribeRoomCharacters();
+    console.log(`RoomsService: unsubscribeFromRoom - Unsubscribed from room characters for roomLocation: ${roomLocation}`);
+    this.unsubscribeRoomCharacters = null;
+    console.log(`RoomsService: Cleared unsubscribeRoomCharacters reference for roomLocation: ${roomLocation}`);
+  }
+}
   async isValidRoom(location: string): Promise<boolean> {
     try {
       const roomRef = query(collection(this.db, 'locations'), where('location', '==', location));
@@ -158,23 +253,7 @@ export class RoomsService {
     return { leftHand: null, rightHand: null };
   }
 
-  // Method to subscribe to a room
-  subscribeToRoom(roomLocation: string): void {
-    this.listenToRoomItems(roomLocation);
-    this.listenToRoomCharacters(roomLocation);
-  }
-
-  // Method to unsubscribe from a room
-  unsubscribeFromRoom(roomLocation: string): void {
-    if (this.unsubscribeRoomItems) {
-      this.unsubscribeRoomItems();
-      this.unsubscribeRoomItems = null;
-    }
-    if (this.unsubscribeRoomCharacters) {
-      this.unsubscribeRoomCharacters();
-      this.unsubscribeRoomCharacters = null;
-    }
-  }
+  
   getRoomName(): Observable<string> {
     return this.currentRoomName.asObservable();
   }
@@ -196,4 +275,5 @@ export class RoomsService {
   getRoomCharacters(): Observable<Characters[]> {
     return this.currentRoomCharacters.asObservable();
   }
+  
 }
