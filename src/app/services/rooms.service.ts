@@ -1,15 +1,15 @@
 // rooms.service.ts
 import { Injectable } from '@angular/core';
-import { serverTimestamp, collection, query, where, getFirestore, getDocs, doc, updateDoc, getDoc, onSnapshot, QuerySnapshot, Timestamp } from 'firebase/firestore';
-import { Observable, from } from 'rxjs';
-import { map, first } from 'rxjs/operators';
-import { TextFeedService } from './text-feed.service';
+import { collection, query, where, getFirestore, getDocs, doc, getDoc, Timestamp, onSnapshot } from 'firebase/firestore';
+import { Observable, from, Subscription } from 'rxjs'; import { TextFeedService } from './text-feed.service';
 import { BehaviorSubject } from 'rxjs';
 import { Room } from '../models/locations'; // Ensure this is the correct path
 import { Item } from '../models/item';
+import { DataFetchService } from './data-fetch.service';
 import { Characters } from '../models/character';
 import { ItemsService } from './items.service';
 import { GameEvent } from '../models/game-event.model';
+import { BroadcastService } from './broadcast.service';
 
 
 @Injectable({
@@ -23,167 +23,59 @@ export class RoomsService {
   private currentRoomItems = new BehaviorSubject<Item[]>([]);
   private currentRoomCharacters = new BehaviorSubject<Characters[]>([]);
   // Unsubscribe functions
+
   // Initialize unsubscribe functions to null and allow them to be null
   private unsubscribeDisplayedRoomItems: (() => void) | null = null;
-  private unsubscribeDisplayingRoomCharacters: (() => void) | null = null;
+  private unsubscribedisplayedRoomCharacters: (() => void) | null = null;
+  private roomItemsSubscription: Subscription | null = null;
+  private roomCharactersSubscription?: Subscription;
+
+
 
   private roomEventsSubject = new BehaviorSubject<GameEvent | null>(null);
 
   constructor(
     private textFeedService: TextFeedService,
-    private itemsService: ItemsService
+    private itemsService: ItemsService,
+    private dataFetchService: DataFetchService,
+    private broadcastService: BroadcastService,
   ) { }
 
-  private unsubscribeFromRoomItems(): void {
-    if (this.unsubscribeDisplayedRoomItems) {
-      this.unsubscribeDisplayedRoomItems();
-    }
-  }
-
-  private unsubscribeFromRoomCharacters(): void {
-    if (this.unsubscribeDisplayingRoomCharacters) {
-      this.unsubscribeDisplayingRoomCharacters();
-    }
-  }
 
   private lastProcessedUpdates = new Map<string, number>();
-  private isNewUpdate(itemId: string, lastUpdated: Timestamp): boolean {
-    const lastProcessedTime = this.lastProcessedUpdates.get(itemId);
-    return !lastProcessedTime || lastUpdated.seconds > lastProcessedTime;
-  }
+
+  // This method subscribes to room items and processes them for a specific location.
+  // It listens for item updates and filters out items that have been picked up.
   displayedRoomItems(roomLocation: string): void {
-    // Logging that the function has been called and is listening to items in the specified room.
-    console.log(`RoomService: Function displayedRoomItems is being called. Listening to items in room: ${roomLocation}`);
-
-    // Creating a Firestore query to get all items in the specified room location.
-    const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
-
-    // Setting up a real-time listener (onSnapshot) for the query. This will update whenever the query results change.
-    this.unsubscribeDisplayedRoomItems = onSnapshot(itemsRef, (querySnapshot: QuerySnapshot) => {
-      // Logging that new data has been received for the room.
-      console.log(`Received query snapshot for room: ${roomLocation}`);
-
-      // An array to hold the items that will be gathered from the snapshot.
-      const items: Item[] = [];
-
-      // Iterating over each document in the snapshot.
-      querySnapshot.forEach((doc) => {
-        // Converting the document data to an Item object.
-        const item = doc.data() as Item;
-
-        // Capturing the document ID (which represents the itemId).
-        const itemId = doc.id;
-
-        // Checking if the item has not been picked up. If so, add it to the items array.
-        if (!item.isPickedUp) {
-          items.push(item);
-        }
-        // If the item has been picked up and it's a new update, broadcast the item pickup.
-        else if (item.lastUpdated && itemId && this.isNewUpdate(itemId, item.lastUpdated)) {
-          // Broadcasting the item pickup to all subscribers.
-          this.broadcastItemPickup(item);
-        }
-      });
-
-      // Updating the BehaviorSubject (currentRoomItems) with the new list of items.
-      // This will notify all subscribers about the current items in the room.
-      this.currentRoomItems.next(items);
-    });
-  }
-
-
-  private async broadcastItemPickup(item: Item): Promise<void> {
-    // Check if the item has an owner. If not, log an error and return.
-    if (!item.owner) {
-      console.error('Item owner not available.');
-      return;
-    }
-
-    try {
-      // Retrieve the Firestore instance for database operations.
-      const firestore = getFirestore();
-
-      // Create a reference to the document of the item's owner in the 'characters' collection.
-      const ownerRef = doc(firestore, `characters/${item.owner}`);
-
-      // Fetch the document snapshot for the owner from Firestore.
-      const ownerSnap = await getDoc(ownerRef);
-
-      // Check if the owner's document exists. If not, log an error and return.
-      if (!ownerSnap.exists()) {
-        console.error('Owner character not found.');
-        return;
+    console.log(`RoomService: Function displayedRoomItems is being called for room: ${roomLocation}`);
+    // Logging the function call with the room location.
+    this.roomItemsSubscription = this.dataFetchService.observeAndProcessRoomItems(roomLocation).subscribe({
+      next: (itemsNotPickedUp) => {
+        // Logging the processed items that are not picked up.
+        console.log(`Processed items for room: ${roomLocation}`, itemsNotPickedUp);
+        // Updating the BehaviorSubject with the filtered items.
+        this.currentRoomItems.next(itemsNotPickedUp);
+      },
+      error: (error) => {
+        // Logging any errors encountered during the subscription.
+        console.error(`Error subscribing to processed items for room ${roomLocation}:`, error);
       }
-
-      // Extract the owner's data from the document snapshot.
-      const ownerData = ownerSnap.data();
-
-      // Access the 'characterName' property from the owner's data.
-      const characterName = ownerData['characterName'];
-
-      // Construct a message indicating that the character has picked up the item.
-      const message = `${characterName} picked up ${item.name}.`;
-
-      // Use the textFeedService to add the message to the text feed.
-      this.textFeedService.addMessage(message);
-
-      // Log the message for debugging or informational purposes.
-      console.log(message);
-
-    } catch (error) {
-      // If an error occurs (e.g., in fetching the document), log the error.
-      console.error('Error fetching character name:', error);
-    }
-  }
-
-
-  displayingRoomCharacters(roomLocation: string): void {
-    const charactersRef = query(
-      collection(this.db, 'characters'),
-      where('location', '==', roomLocation),
-      where('isOnline', '==', true) // Only get characters that are online
-    );
-
-    // Correctly assign the unsubscribe function
-    this.unsubscribeDisplayingRoomCharacters = onSnapshot(charactersRef, (querySnapshot: QuerySnapshot) => {
-      console.log('Characters snapshot received for location:', roomLocation);
-
-      const characters: Characters[] = [];
-      querySnapshot.forEach((doc) => {
-        const character = doc.data() as Characters;
-        characters.push(character);
-      });
-      this.currentRoomCharacters.next(characters);
-      console.log('Updated characters:', characters);
     });
   }
 
-  listenToRoomEvents(roomLocation: string): void {
-    const eventsRef = collection(this.db, `locations/${roomLocation}/events`);
-    console.log("Listening to room events for location:", roomLocation);
-    // Set up your Firestore listener here...
-    onSnapshot(eventsRef, (snapshot) => {
-      console.log("Snapshot received:", snapshot);
-      snapshot.docChanges().forEach((change) => {
-        console.log("Document change:", change);
-        if (change.type === 'added') {
-          const gameEvent = change.doc.data() as GameEvent;
-          console.log("New game event:", gameEvent);
-          this.roomEventsSubject.next(gameEvent);
-        }
-      });
-    });
-  }
 
   getRoomEvents(): Observable<GameEvent | null> {
     return this.roomEventsSubject.asObservable();
   }
+
+  // This method updates the current location of the room and sets up listeners for the new location.
   async updateLocation(location: string): Promise<void> {
-    // Unsubscribe from the current room's items and characters if the location is changing
+    // Check if the location has changed to perform cleanup tasks.
     if (this.currentLocation !== location) {
+      // Unsubscribe from the current room's observables before updating to a new location.
       this.cleanupListeners();
     }
-
+    // ... (fetching room details)
     const roomRef = query(collection(this.db, 'locations'), where('location', '==', location));
     const roomSnapshot = await getDocs(roomRef);
 
@@ -193,121 +85,147 @@ export class RoomsService {
       this.currentRoomName.next(roomData.name); // Update room name
       this.currentRoomDescription.next(roomData.description); // Update room description
 
-      // Fetch items in the room
+      // Fetch items in the room and generate room entry message
       this.itemsService.getItemsInRoom(location).subscribe((items) => {
         const visibleItems = items.filter(item => !item.isPickedUp).map(item => `<span class="item-name">${item.name}</span>`).join(', ');
-        const roomEntryMessage = `<div class="room-name-header">${roomData.name}</div><p class="feed-message"> ${roomData.description}${visibleItems.length > 0 ? ' You see ' + visibleItems : ''}</p>`;
+        const roomEntryMessage = `<div class="room-name-header">${roomData.name}</div><p class="feed-message">${roomData.description}${visibleItems.length > 0 ? ' You see ' + visibleItems : ''}</p>`;
         this.textFeedService.addMessage(roomEntryMessage);
       });
 
-      // Subscribe to the new room's items and characters
-      this.displayedRoomItems(location);
-      console.log('RoomsService:Function Update Location Subscribing to Items using displayedRoomItems in RoomsService');
-      this.displayingRoomCharacters(location);
-      console.log('RoomsService: Function Update Location Subscribing to Rooma using displayingRoomCharacters in RoomsService');
+      // After fetching room details, reinitialize listeners for the new room.
+      this.reinitializeListeners(location);
     } else {
       this.textFeedService.addMessage('You can\'t go that way.');
     }
   }
 
-  cleanupListeners() {
-    console.log('CleanupListeners');
-    this.unsubscribeFromRoomItems();
-    console.log('unsubscribeFromRoomItems');
-    this.unsubscribeFromRoomCharacters();
-    console.log('unsubscribeFromRoomCharacters');
-
-  }
-
-  // Method to subscribe to a room
-  subscribeToRoom(roomLocation: string): void {
-    console.log('RoomsService: Method subscribeToRoom was called')
-    this.displayedRoomItems(roomLocation);
-    console.log('Method subscribeToRoom using displayedRoomItems was called to subscribe to room');
-    this.displayingRoomCharacters(roomLocation);
-    console.log('RoomsService: Method subscribeToRoom using listenToRoom was called to subscribe to Characters');
-  }
-
-  // Method to unsubscribe from a room
-  unsubscribeFromRoom(roomLocation: string): void {
-    console.log(`RoomsService: unsubscribeFromRoom called for roomLocation: ${roomLocation}`);
-
-    if (this.unsubscribeDisplayedRoomItems) {
-      this.unsubscribeDisplayedRoomItems();
-      console.log(`RoomsService: unsubscribeFromRoom - Unsubscribed from room items for roomLocation: ${roomLocation}`);
-      this.unsubscribeDisplayedRoomItems = null;
-      console.log(`RoomsService: Cleared unsubscribeDisplayedRoomItems reference for roomLocation: ${roomLocation}`);
+  // This method unsubscribes from current room observables to prevent memory leaks and unnecessary updates.
+  cleanupListeners(): void {
+    console.log('[RoomsService] CleanupListeners called');
+    // Unsubscribing from room items if a subscription exists.
+    if (this.roomItemsSubscription) {
+      this.roomItemsSubscription.unsubscribe();
+      this.roomItemsSubscription = null;
     }
-
-    if (this.unsubscribeDisplayingRoomCharacters) {
-      this.unsubscribeDisplayingRoomCharacters();
-      console.log(`RoomsService: unsubscribeFromRoom - Unsubscribed from room characters for roomLocation: ${roomLocation}`);
-      this.unsubscribeDisplayingRoomCharacters = null;
-      console.log(`RoomsService: Cleared unsubscribeDisplayingRoomCharacters reference for roomLocation: ${roomLocation}`);
+    // Unsubscribing from room characters if a subscription exists.
+    if (this.roomCharactersSubscription) {
+      this.roomCharactersSubscription.unsubscribe();
+      this.roomCharactersSubscription = undefined; // Set to undefined instead of null
     }
+    // Additional cleanup tasks can be added here if needed.
   }
+
+ // This method sets up new listeners for a given room location.
+// It is called after changing rooms to listen to updates in the new room.
+reinitializeListeners(newRoomLocation: string): void {
+  // Logging the start of reinitialization for the new room location
+  console.log(`[RoomsService] Reinitializing listeners for room: ${newRoomLocation}`);
+
+  // Setting up a new subscription for room characters.
+  // Using the observeRoomCharacters method from DataFetchService to get an Observable for room characters.
+  this.roomCharactersSubscription = this.dataFetchService.observeRoomCharacters(newRoomLocation).subscribe({
+    // When new character data is received for the room
+    next: characters => {
+      // Logging the characters received for the new room
+      console.log(`[RoomsService] Characters in room ${newRoomLocation}:`, characters);
+      // Updating the BehaviorSubject (currentRoomCharacters) with the new characters.
+      // This will notify all subscribers about the updated characters in the room.
+      this.currentRoomCharacters.next(characters);
+    },
+    // In case of an error during subscription
+    error: error => {
+      // Logging the error encountered while observing characters in the new room
+      console.error(`[RoomsService] Error observing characters in room ${newRoomLocation}:`, error);
+    }
+  });
+
+  // Setting up a new subscription for room items using the updated observeAndProcessRoomItems method.
+  // This method observes room items and processes them (like filtering out picked up items).
+  this.roomItemsSubscription = this.dataFetchService.observeAndProcessRoomItems(newRoomLocation).subscribe({
+    // When new item data is received and processed for the room
+    next: itemsNotPickedUp => {
+      // Logging the processed items received for the new room
+      console.log(`Processed items for room: ${newRoomLocation}`, itemsNotPickedUp);
+      // Updating the BehaviorSubject (currentRoomItems) with the processed items.
+      // This will notify all subscribers about the updated items in the room.
+      this.currentRoomItems.next(itemsNotPickedUp);
+    },
+    // In case of an error during subscription
+    error: error => {
+      // Logging the error encountered while subscribing to processed items for the new room
+      console.error(`Error subscribing to processed items for room ${newRoomLocation}:`, error);
+    }
+  });
+
+  // Additional setup tasks for the new room...
+  // Here you can add any other setup tasks needed when switching to a new room.
+}
+
+
+  // Checks if the given location is a valid room in the game world.
   async isValidRoom(location: string): Promise<boolean> {
     try {
+      // Query Firestore to check if the room exists based on the location.
       const roomRef = query(collection(this.db, 'locations'), where('location', '==', location));
       const roomSnapshot = await getDocs(roomRef);
+      // Return true if the room exists (i.e., the query returned documents).
       return !roomSnapshot.empty;
     } catch (error) {
+      // Log and return false if an error occurs during the query.
       console.error(`Error in isValidRoom for location ${location}:`, error);
       return false;
     }
   }
 
-  // New method to get the document ID by characterId
-  async getDocumentIdByCharacterId(characterId: string): Promise<string | null> {
-    const characterQuery = query(collection(this.db, 'characters'), where('characterId', '==', characterId));
-    const querySnapshot = await getDocs(characterQuery);
-
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs[0].id; // Return the first document's ID
-    }
-    return null; // Return null if no document found
-  }
-
-
+  // Fetches which items a character is holding in their hands.
   async getCharacterHands(characterId: string): Promise<{ leftHand: string | null, rightHand: string | null }> {
-    const characterDocId = await this.getDocumentIdByCharacterId(characterId);
+    // Use DataFetchService to get the document ID for the character.
+    const characterDocId = await this.dataFetchService.getDocumentIdByCharacterId(characterId);
     if (!characterDocId) {
+      // Return null for both hands if the character document ID is not found.
       return { leftHand: null, rightHand: null };
     }
-
-    const characterRef = doc(this.db, 'characters', characterDocId);
-    const characterSnap = await getDoc(characterRef);
-
-    if (characterSnap.exists()) {
-      const characterData = characterSnap.data() as Characters;
-      return {
-        leftHand: characterData.leftHand !== undefined ? characterData.leftHand : null,
-        rightHand: characterData.rightHand !== undefined ? characterData.rightHand : null
-      };
-    }
-
-    return { leftHand: null, rightHand: null };
+    // Retrieve the character's hand data from Firestore.
+    return this.dataFetchService.getCharacterHandsData(characterDocId);
   }
 
-
+  // Provides an Observable for the current room name, allowing components to react to changes.
   getRoomName(): Observable<string> {
     return this.currentRoomName.asObservable();
   }
 
+  // Provides an Observable for the current room description, allowing components to react to changes.
   getRoomDescription(): Observable<string> {
     return this.currentRoomDescription.asObservable();
   }
-  // Method to update room items
+  // Method to update room items based on location. This method is not used if using observeAndProcessRoomItems.
   updateRoomItems(location: string): void {
-    this.itemsService.getItemsInRoom(location).subscribe(items => {
-      this.currentRoomItems.next(items.filter(item => !item.isPickedUp));
+    console.log("updateRoomItems: Method called to update room items for location:", location);
+    // Fetches items in the room and updates the BehaviorSubject with items that are not picked up.
+    this.itemsService.getItemsInRoom(location).subscribe({
+      next: (items) => {
+        console.log("updateRoomItems: Received items from getItemsInRoom:", items);
+        // Filter out items that are picked up.
+        const itemsNotPickedUp = items.filter(item => !item.isPickedUp);
+        console.log("updateRoomItems: Filtered items not picked up:", itemsNotPickedUp);
+
+        // Update the BehaviorSubject with the filtered items.        
+        this.currentRoomItems.next(itemsNotPickedUp);
+        console.log("updateRoomItems: Updated currentRoomItems BehaviorSubject with items not picked up.");
+      },
+      error: (error) => {
+        // Log any errors encountered while fetching items.
+        console.error("updateRoomItems: Error fetching items for room", location, ":", error);
+      }
     });
   }
-  // Getter for room items Observable
+  // This method returns an Observable for room items.
+  // Components can subscribe to this Observable to get real-time updates on room items.
   getRoomItems(): Observable<Item[]> {
     return this.currentRoomItems.asObservable();
   }
-  // Getter for room characters Observable
+  // This method returns an Observable for room characters.
+  // Components can subscribe to this Observable to get real-time updates on characters in the room.
   getRoomCharacters(): Observable<Characters[]> {
     return this.currentRoomCharacters.asObservable();
   }

@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { serverTimestamp, collection, query, where, getFirestore, addDoc, getDocs, doc, updateDoc, getDoc, DocumentData } from 'firebase/firestore';
 import { Observable, from } from 'rxjs';
-import { map, first } from 'rxjs/operators';
 import { Item } from '../models/item';
-import { Characters } from '../models/character';
 import { GameBatchService, BatchUpdate } from './game-batch.service'; // Import GameBatchService
 import { TextFeedService } from './text-feed.service';
+import { DataFetchService } from './data-fetch.service';
+import { BroadcastService } from './broadcast.service';
+import { GameEventsService } from './game-events.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,95 +14,62 @@ import { TextFeedService } from './text-feed.service';
 export class ItemsService {
   private db = getFirestore();
 
+
   constructor(
     private textFeedService: TextFeedService,
-    private gameBatchService: GameBatchService
+    private gameBatchService: GameBatchService,
+    private dataFetchService: DataFetchService,
+    private broadcastService: BroadcastService,
+    private gameEventsService: GameEventsService,
+
   ) { }
 
-  async getItemById(itemId: string): Promise<Item | null> {
-    try {
-      const itemRef = doc(this.db, 'items', itemId);
-      const itemSnap = await getDoc(itemRef);
 
-      if (itemSnap.exists()) {
-        return { ...itemSnap.data(), id: itemSnap.id } as Item; // Make sure this matches your Item model
-      } else {
-        console.log(`Item with ID ${itemId} not found.`);
-        return null;
-      }
-    } catch (error) {
-      console.error('Error fetching item by ID:', error);
-      throw error;
-    }
+  async getItemById(itemId: string): Promise<Item | null> {
+    return this.dataFetchService.getItemById(itemId);
   }
 
 
   getItemsInRoom(roomLocation: string): Observable<Item[]> {
-    const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
-    return from(getDocs(itemsRef)).pipe(
-      map((querySnapshot) =>
-        querySnapshot.docs.map((docSnapshot) => {
-          const data = docSnapshot.data() as DocumentData; // Adjust to your data structure
-          return {
-            name: data['name'],
-            description: data['description'],
-            isPickedUp: data['isPickedUp'],
-          } as Item;
-        })
-      )
-    );
+    console.log("get item in room called");
+
+    // Delegating the task to DataFetchService
+    return this.dataFetchService.getItemsInRoom(roomLocation);
   }
 
   isItemInRoom(itemName: string, roomLocation: string): Observable<boolean> {
-    const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
-    return from(getDocs(itemsRef)).pipe(
-      map((querySnapshot) =>
-        querySnapshot.docs.some(docSnapshot => {
-          const item = docSnapshot.data() as DocumentData; // Adjust to your data structure
-          console.log(`isItemInRoom item name: ${itemName}`);
-          return item['name'] === itemName && !item['isPickedUp'];
-        })
-      ),
-      first() // Complete the observable after receiving the first value
-    );
+    console.log("is item in room called");
+    // Delegating the task to DataFetchService
+    return this.dataFetchService.isItemInRoom(itemName, roomLocation);
   }
 
-  async pickUpItem(characterDocId: string, itemName: string, hand: 'leftHand' | 'rightHand', roomLocation: string): Promise<void> {
+  async pickUpItem(characterId: string, itemName: string, hand: 'leftHand' | 'rightHand', roomLocation: string): Promise<void> {
+    console.log("pickUpItem is called, this updates the database");
+
     try {
-      console.log('Starting pickUpItem function...');
-
-      // Convert the itemName to lowercase for a case-insensitive query
-      const lowercaseItemName = itemName.toLowerCase();
-      const itemsRef = query(collection(this.db, 'items'), where('name', '==', lowercaseItemName), where('location', '==', roomLocation));
-      const querySnapshot = await getDocs(itemsRef);
-
-      if (querySnapshot.empty) {
-        throw new Error(`Item '${itemName}' not found in the room.`);
-      }
-
-      // Sort the items by your criteria (e.g., usage, amount left)
-      const sortedItems = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .sort(/* your sorting function here */);
-
-      const itemDoc = sortedItems[0];
-      const itemDocId = itemDoc.id;
-
-      const characterRef = doc(this.db, 'characters', characterDocId);
-      const itemRef = doc(this.db, 'items', itemDocId);
-
-      const [characterSnap, itemSnap] = await Promise.all([getDoc(characterRef), getDoc(itemRef)]);
-      if (!characterSnap.exists()) {
-        throw new Error('Character not found.');
-      }
-      if (!itemSnap.exists()) {
+      // Fetch item data
+      const itemResult = await this.dataFetchService.getItemByQuery([
+        where('name', '==', itemName.toLowerCase()),
+        where('location', '==', roomLocation)
+      ]);
+      if (!itemResult) {
         throw new Error(`Item '${itemName}' not found.`);
       }
+      const { itemData, itemDocId } = itemResult;
 
-      const characterData = characterSnap.data() as Characters;
-      const itemData = itemSnap.data() as DocumentData;
-      if (characterData[hand] || itemData['isPickedUp']) {
-        throw new Error('Cannot pick up the item: hand is full or the item is already picked up.');
+      // Fetch character data using character ID
+      const characterResult = await this.dataFetchService.getCharacterById(characterId);
+      if (!characterResult) {
+        throw new Error('Character not found.');
+      }
+      const { characterData, characterDocId } = characterResult;
+
+      // Validate item and character data
+      if (itemData.isPickedUp) {
+        throw new Error(`Item '${itemName}' already picked up.`);
+      }
+      if (characterData[hand]) {
+        throw new Error('Hand is full.');
       }
 
       // Prepare batch updates
@@ -115,82 +83,54 @@ export class ItemsService {
           data: {
             isPickedUp: true,
             owner: characterDocId,
-            lastUpdated: serverTimestamp() // Add the timestamp here
+            lastUpdated: serverTimestamp()
           }
         }
       ];
 
       // Perform the batch update
       await this.gameBatchService.performBatchUpdate(characterDocId, updates);
-
       console.log('Item picked up successfully.');
 
-      // Create the item pickup event
-      await this.createItemPickupEvent(characterDocId, itemDocId, itemName, roomLocation);
+      // Create Game event (creates an event in database)
+      this.gameEventsService.createGameEvent('itemPickup', { itemId: itemDocId, characterId: characterId }, roomLocation);
+
+
     } catch (error) {
       console.error('Failed to pick up item:', error);
       this.textFeedService.addMessage(error instanceof Error ? error.message : "An unexpected error occurred.");
     }
   }
 
-  // Method to create item pickup event
-  async createItemPickupEvent(characterDocId: string, itemDocId: string, itemName: string, roomLocation: string): Promise<void> {
-    const eventsRef = collection(this.db, `locations/${roomLocation}/events`);
-    try {
-      await addDoc(eventsRef, {
-        type: 'itemPickup',
-        details: {
-          characterId: characterDocId,
-          itemId: itemDocId,
-          itemName: itemName,
-          timestamp: serverTimestamp()
-        }
-      });
-      console.log(`Item pickup event created for item ${itemName} by character ${characterDocId}`);
-    } catch (error) {
-      console.error('Error creating item pickup event:', error);
-    }
-  }
+
+
 
   async dropItem(characterDocId: string, itemName: string, hand: 'leftHand' | 'rightHand', roomLocation: string): Promise<void> {
     console.log('Attempting to drop item for character:', characterDocId);
 
-    // Reference to the character document
-    const characterRef = doc(this.db, 'characters', characterDocId);
-    console.log('Fetching character document for ID:', characterDocId);
-
-    // Get current data of the character
-    const characterSnap = await getDoc(characterRef);
-    if (!characterSnap.exists()) {
-      console.error("Character document not found for ID:", characterDocId);
+    // Fetch character data
+    const characterResult = await this.dataFetchService.getCharacterById(characterDocId);
+    if (!characterResult) {
       throw new Error("Character not found.");
     }
-    console.log('Character document found for ID:', characterDocId);
+    const { characterData, characterDocId: fetchedCharacterDocId } = characterResult;
 
-    const characterData = characterSnap.data() as Characters;
-    const itemDocId = characterData[hand]; // The document ID of the item in the hand
+    // Get the item document ID from the character's hand
+    const itemDocId = characterData[hand];
     if (!itemDocId) {
-      console.error(`No item in the ${hand} to drop for character ID:`, characterDocId);
       throw new Error(`No item in the ${hand} to drop.`);
     }
 
-    // Reference to the item document
-    const itemRef = doc(this.db, 'items', itemDocId);
-    console.log(`Fetching item document for ID: ${itemDocId}`);
-
-    // Get the item data
-    const itemSnap = await getDoc(itemRef);
-    if (!itemSnap.exists() || (itemSnap.data() as Item).name.toLowerCase() !== itemName.toLowerCase()) {
-      console.error(`The item ${itemName} is not in your ${hand} or doesn't exist in the database.`);
+    // Fetch item data
+    const itemData = await this.dataFetchService.getItemById(itemDocId);
+    if (!itemData || itemData.name.toLowerCase() !== itemName.toLowerCase()) {
       throw new Error(`The item ${itemName} is not in your ${hand}.`);
     }
-
-    console.log(`Updating character and item documents for dropping item: ${itemName}`);
 
     // Prepare batch updates
     const updates: BatchUpdate[] = [
       {
-        path: `characters/${characterDocId}`,
+        path: `characters/${fetchedCharacterDocId}`,
         data: { [hand]: null }
       },
       {
@@ -200,16 +140,10 @@ export class ItemsService {
     ];
 
     // Perform the batch update
-    await this.gameBatchService.performBatchUpdate(characterDocId, updates);
+    await this.gameBatchService.performBatchUpdate(fetchedCharacterDocId, updates);
 
     this.textFeedService.addMessage(`You dropped the ${itemName}.`);
     console.log(`Item ${itemName} dropped successfully.`);
   }
-
-
-
-
-
-
   // Add item-related methods here
 }

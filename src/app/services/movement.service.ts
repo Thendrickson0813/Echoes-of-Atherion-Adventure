@@ -42,41 +42,43 @@ export class MovementService {
   async move(direction: 'North' | 'South' | 'East' | 'West') {
     let newX = this.currentX;
     let newY = this.currentY;
-  
+
     switch (direction) {
       case 'North': newY++; break;
       case 'South': newY--; break;
       case 'East': newX++; break;
       case 'West': newX--; break;
     }
-  
+
     if (newX < 0 || newY < 0) {
       console.error('Invalid move: Reached the edge of the world');
       return;
     }
-  
-    const newLocation = `X${newX}Y${newY}`; // Combines the new X and Y coordinates into a string format 'XnYn'
-  
-    const isValidMove = await this.roomsService.isValidRoom(newLocation); // Checks if the new location is a valid room
-  
-    if (isValidMove) {
-      // Unsubscribe from the current room before moving
-      this.roomsService.unsubscribeFromRoom(this.currentLocation);
-      console.log('movementService: Move Function is Unsubscribing from the current room before moving using unsubscribeFromRoom');
 
+    const newLocation = `X${newX}Y${newY}`; // Combines the new X and Y coordinates into a string format 'XnYn'
+
+    const isValidMove = await this.roomsService.isValidRoom(newLocation); // Checks if the new location is a valid room
+
+    if (isValidMove) {
+      
       // Update new location
       this.currentX = newX;
       this.currentY = newY;
-  
-      // Subscribe to new room after moving
-      this.roomsService.subscribeToRoom(newLocation);
-      console.log('movementService: Move Function is Subscribing to new room after moving using subscribeToRoom');
 
-  
       // Update location in other services
       this.characterService.setLocation(newLocation);
       this.gameStateService.setSelectedCharacterLocation(newLocation);
+
+      // Clean up listeners for the current room
+      this.roomsService.cleanupListeners();
+
+      // Updates the database
+      console.log('cleaning up listeners before move');
       this.locationUpdateService.updateLocation(newLocation);
+
+       // Reinitialize listeners for the new room
+       this.roomsService.reinitializeListeners(newLocation);
+       console.log("Reinitialize listeners for the new room");
     }
   }
 }
