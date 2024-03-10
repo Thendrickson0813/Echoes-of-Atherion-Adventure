@@ -7,6 +7,7 @@ import { TextFeedService } from './text-feed.service';
 import { DataFetchService } from './data-fetch.service';
 import { BroadcastService } from './broadcast.service';
 import { GameEventsService } from './game-events.service';
+import { RealTimeService } from './real-time.service';
 
 @Injectable({
   providedIn: 'root',
@@ -21,6 +22,7 @@ export class ItemsService {
     private dataFetchService: DataFetchService,
     private broadcastService: BroadcastService,
     private gameEventsService: GameEventsService,
+    private realTimeService: RealTimeService,
 
   ) { }
 
@@ -92,8 +94,9 @@ export class ItemsService {
       await this.gameBatchService.performBatchUpdate(characterDocId, updates);
       console.log('Item picked up successfully.');
 
+      
       // Create Game event (creates an event in database)
-      this.gameEventsService.createGameEvent('itemPickup', { itemId: itemDocId, characterId: characterId }, roomLocation);
+     /*  this.gameEventsService.createGameEvent('itemPickup', { itemId: itemDocId, characterId: characterId }, roomLocation); */
 
 
     } catch (error) {
@@ -142,8 +145,6 @@ export class ItemsService {
     // Perform the batch update
     await this.gameBatchService.performBatchUpdate(fetchedCharacterDocId, updates);
 
-    this.textFeedService.addMessage(`You dropped the ${itemName}.`);
-    console.log(`Item ${itemName} dropped successfully.`);
   }
   // Add item-related methods here
 }

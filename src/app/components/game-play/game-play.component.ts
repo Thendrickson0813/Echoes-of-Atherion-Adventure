@@ -15,7 +15,7 @@ import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { DataFetchService } from 'src/app/services/data-fetch.service';
 import { GameEventsService } from 'src/app/services/game-events.service';
-
+import { RealTimeService } from 'src/app/services/real-time.service';
 
 
 @Component({
@@ -59,6 +59,7 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     private characterActivityService: CharacterActivityService,
     private dataFetchService: DataFetchService,
     private gameEventsService: GameEventsService,
+    private realTimeService: RealTimeService,
 
   ) { }
 
@@ -83,6 +84,56 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit() {
+
+    this.fetchCharacterName(); // Call a method to fetch and store the character's name
+
+    this.realTimeService.onCharacterEnter((message) => {
+      console.log('Character enter event:', message);
+      const currentCharacterId = this.gameStateService.getSelectedCharacterId();
+      
+      // Ensure currentCharacterId is not null before checking
+      if (currentCharacterId && !message.includes(currentCharacterId)) {
+        this.textFeedService.addMessage(message);
+      }
+    });
+    
+  
+  
+    this.realTimeService.onCharacterLeave((message) => {
+      console.log('Character leave event:', message);
+      const currentCharacterId = this.gameStateService.getSelectedCharacterId();
+      
+      if (currentCharacterId && !message.includes(currentCharacterId)) {
+        this.textFeedService.addMessage(message);
+      }
+    });
+  
+
+    this.realTimeService.onItemPickedUp((data) => {
+      console.log('Received item pickup event:', data);
+      const { message, characterId } = data;
+      const currentCharacterId = this.gameStateService.getSelectedCharacterId();
+      console.log(`Comparing IDs: Event Character ID = ${characterId}, Current Character ID = ${currentCharacterId}`);
+
+      if (characterId !== currentCharacterId) {
+        const styledMessage = this.textFeedService.styleMessageParts(message);
+        this.textFeedService.addMessage(message);
+      }
+    });
+
+    this.realTimeService.onItemDrop((data) => {
+      console.log('Received item drop event:', data);
+      const { message, characterId } = data;
+      const currentCharacterId = this.gameStateService.getSelectedCharacterId();
+
+      console.log(`Comparing IDs: Event Character ID = ${characterId}, Current Character ID = ${currentCharacterId}`);
+
+      if (characterId !== currentCharacterId) {
+        const styledMessage = this.textFeedService.styleMessageParts(message);
+        this.textFeedService.addMessage(message);
+        console.log('Adding styled message for Drop item in gameplay component');
+      }
+    });
 
     // Get the selected character ID from the GameStateService
     this.currentCharacterId = this.gameStateService.getSelectedCharacterId();
@@ -138,34 +189,22 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     } else {
       console.error('No Firestore Document ID found for the selected character');
     }
-    // Update the location and listen to events if the initial location is set
+    // Handle the initial character location
     const initialLocation = this.gameStateService.getSelectedCharacterLocation();
     if (initialLocation) {
       this.updateLocationAndListenToEvents(initialLocation);
+    } else {
+      console.error('Unable to retrieve character initial location');
     }
 
-    // Subscribe to location changes from CharacterService
-    this.characterService.getLocation().subscribe((newLocation: string | null) => {
-      if (newLocation && newLocation !== this.currentLocation) {
-        this.updateLocationAndListenToEvents(newLocation);
-      }
-    });
-
     // Subscribe to location changes from the CharacterService
+    // This will handle all future location changes after the initial setup
     this.locationChangeSubscription = this.characterService.getLocation().subscribe((newLocation: string | null) => {
       if (newLocation && this.currentLocation !== newLocation) {
         console.log("Location updated to: ", newLocation);
         this.updateLocationAndListenToEvents(newLocation);
       }
     });
-
-    // Handle initial character location
-    const characterInitialLocation = this.gameStateService.getSelectedCharacterLocation();
-    if (characterInitialLocation) {
-      this.updateLocationAndListenToEvents(characterInitialLocation);
-    } else {
-      console.error('Unable to retrieve character initial location');
-    }
 
     // Subscribe to changes in room name
     this.roomNameSubscription = this.roomsService.getRoomName().subscribe(name => {
@@ -175,32 +214,11 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
 
   }
 
-  private async handleItemPickupEvent(event: GameEvent) {
-    if (event.details && 'characterId' in event.details && 'itemId' in event.details) {
-      try {
-        const characterName = await this.dataFetchService.fetchCharacterNameByOwnerId(event.details.characterId);
-        const itemName = await this.dataFetchService.fetchItemNameById(event.details.itemId);
-  
-        if (characterName && itemName) {
-          this.textFeedService.addMessage(`${characterName} picked up ${itemName}.`);
-        } else {
-          console.log("Error: Character or Item not found for IDs:", event.details.characterId, event.details.itemId);
-        }
-      } catch (error) {
-        console.error("Failed to fetch character or item data:", error);
-        // Handle the error appropriately
-      }
-    } else {
-      console.log("Error: event details are incomplete", event.details);
-    }
-  }
-  
-  
-
   ngOnDestroy() {
 
     // Unsubscribe from all subscriptions to prevent memory leaks
-    // Unsubscribe from all subscriptions to prevent memory leaks
+    this.realTimeService.removeItemPickedUpListener();
+    this.realTimeService.removeItemDropListener();
     this.roomDescriptionSubscription?.unsubscribe();
     this.roomItemsSubscription?.unsubscribe();
     this.roomCharactersSubscription?.unsubscribe();
@@ -217,11 +235,33 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.roomEventsSubscription.unsubscribe();
     }
   }
-  // Update the current location and listen to game events at the new location
-  private updateLocationAndListenToEvents(newLocation: string) {
+  // game-play.component.ts
+  private async updateLocationAndListenToEvents(newLocation: string) {
+    const characterId = this.gameStateService.getSelectedCharacterId() || 'unknown-character';
+    const characterName = await this.fetchCharacterName();
+
+    if (this.currentLocation) {
+      this.realTimeService.leaveRoom(this.currentLocation, characterName, characterId);
+      console.log(`Left room: ${this.currentLocation}`);
+    }
+
     this.currentLocation = newLocation;
+    this.realTimeService.joinRoom(newLocation, characterName, characterId);
+    console.log(`Joined room: ${newLocation}`);
+
     this.roomsService.updateLocation(newLocation);
-    this.gameEventsService.listenToGameEvents(newLocation);
+  }
+
+  private async fetchCharacterName(): Promise<string> {
+    const characterId = this.gameStateService.getSelectedCharacterId();
+    if (characterId) {
+      const characterDocId = await this.dataFetchService.getDocumentIdByCharacterId(characterId);
+      if (characterDocId) {
+        const characterName = await this.dataFetchService.fetchCharacterNameByDocumentId(characterDocId);
+        return characterName || 'Unknown Character'; // Return 'Unknown Character' if characterName is null
+      }
+    }
+    return 'Unknown Character'; // Fallback in case character name can't be retrieved
   }
 
   ngAfterViewInit() {
@@ -295,6 +335,45 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     return items.slice().reverse();
   }
 
+  private async handleItemPickupEvent(event: GameEvent) {
+    if (event.details && 'characterId' in event.details && 'itemId' in event.details) {
+      try {
+        const characterName = await this.dataFetchService.fetchCharacterNameByOwnerId(event.details.characterId);
+        const itemName = await this.dataFetchService.fetchItemNameById(event.details.itemId);
+
+        if (characterName && itemName) {
+          this.textFeedService.addMessage(`${characterName} picked up a ${itemName}.`);
+        } else {
+          console.log("Error: Character or Item not found for IDs:", event.details.characterId, event.details.itemId);
+        }
+      } catch (error) {
+        console.error("Failed to fetch character or item data:", error);
+        // Handle the error appropriately
+      }
+    } else {
+      console.log("Error: event details are incomplete", event.details);
+    }
+  }
+
+  private async handleItemDropEvent(event: GameEvent) {
+    if (event.details && 'characterId' in event.details && 'itemId' in event.details) {
+      try {
+        const characterName = await this.dataFetchService.fetchCharacterNameByOwnerId(event.details.characterId);
+        const itemName = await this.dataFetchService.fetchItemNameById(event.details.itemId);
+
+        if (characterName && itemName) {
+          this.textFeedService.addMessage(`${characterName} dropped an ${itemName}.`);
+        } else {
+          console.log("error: Character or Item not found for IDs:", event.details.characterId, event.details.itemId);
+        }
+      } catch (error) {
+        console.error("failed to fetch character or item date:", error);
+        // Handle error
+      }
+    } else {
+      console.log("Error: event details are incomplete", event.details);
+    }
+  }
 
 
   private async pickUpItem(itemName: string, handToUse: "leftHand" | "rightHand") {
@@ -309,14 +388,18 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const characterDocId = await this.dataFetchService.getDocumentIdByCharacterId(characterId);
-    console.log('Character Doc ID:', characterDocId);
-
     if (!characterDocId) {
-      this.textFeedService.addMessage(`Character not found.`);
-      console.log('Character not found.');
+      this.textFeedService.addMessage(`Character document not found.`);
+      console.error('Character document not found.');
       return;
     }
 
+    // Fetch the character name using the document ID
+    const characterName = await this.dataFetchService.fetchCharacterNameByDocumentId(characterDocId);
+    if (!characterName) {
+      console.error('Failed to retrieve character name.');
+      return;
+    }
     if (this.currentLocation === null) {
       this.textFeedService.addMessage(`Current location is not available.`);
       console.log('Current location is not available.');
@@ -330,10 +413,15 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.textFeedService.addMessage(`${itemName} not found.`);
       return;
     }
+
+    let successfulPickup = false;
     try {
       await this.itemsService.pickUpItem(characterDocId, itemName, handToUse, this.currentLocation);
       console.log('Item Pickup in GamePlayComponent passed.');
-      this.textFeedService.addMessage(`You picked up the ${itemName}.`);
+      this.textFeedService.addMessage(`You picked up a {itemName: ${itemName}}.`);
+      console.log(`Message sent to TextFeedService: You picked the Item: ${itemName}.`);
+
+      successfulPickup = true;
     } catch (error) {
       console.error('Failed to pick up item:', error);
       if (error instanceof Error) {
@@ -342,7 +430,15 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
         this.textFeedService.addMessage(`An unexpected error occurred.`);
       }
     }
+
+    if (successfulPickup) {
+      const characterId = this.gameStateService.getSelectedCharacterId() || 'unknown-character';
+      const message = `{characterName:${characterName}} picked up {itemName:${itemName}}.`;
+      console.log(`Emitting item pickup: ${message}, Character ID: ${characterId}`);
+      this.realTimeService.emitItemPickup(this.currentLocation, message, characterId);
+    }
   }
+
 
   async dropItem(hand: 'leftHand' | 'rightHand') {
     const gameCharacterId = this.gameStateService.getSelectedCharacterId();
@@ -363,7 +459,12 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Fetch the item name from the character's hand
+    const characterName = await this.dataFetchService.fetchCharacterNameByDocumentId(firestoreCharacterDocId);
+    if (!characterName) {
+      console.error('Failed to retrieve character name.');
+      return;
+    }
+
     const characterHands = await this.roomsService.getCharacterHands(gameCharacterId);
     const itemDocId = hand === 'leftHand' ? characterHands.leftHand : characterHands.rightHand;
     if (!itemDocId) {
@@ -371,7 +472,6 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Fetch the actual item name using the document ID
     const item = await this.itemsService.getItemById(itemDocId);
     if (!item) {
       this.textFeedService.addMessage(`Item not found.`);
@@ -379,9 +479,11 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     const itemName = item.name;
 
-    // Now proceed to drop the item using its name
+    let successfulDrop = false;
     try {
       await this.itemsService.dropItem(firestoreCharacterDocId, itemName, hand, currentLocation);
+
+      successfulDrop = true;
     } catch (error) {
       console.error('Error dropping item:', error);
       if (error instanceof Error) {
@@ -390,7 +492,19 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
         this.textFeedService.addMessage(`An unknown error occurred.`);
       }
     }
+
+    if (successfulDrop) {
+      // Use placeholders in the message string
+      const messageForOthers = `{characterName:${characterName}} dropped a {itemName:${itemName}}.`;
+      this.realTimeService.emitItemDrop(currentLocation, messageForOthers, gameCharacterId);
+      console.log(`Item drop event emitted: ${messageForOthers}`);
+
+      const messageForSelf = `You dropped the {itemName: ${itemName}}.`;
+      this.textFeedService.addMessage(messageForSelf);
+    }
   }
+
+
 
 
   // ... rest of your component code ...
@@ -487,6 +601,9 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.roomCharacters.length > 0 ? 'Also in the room ' + this.roomCharacters.map(character => `<span class="character-name">${character.characterName}</span>`).join(' and ') : '';
   }
 
+  getStyledMessage(characterName: string, action: string, itemName: string): string {
+    return `<span class="character-name">${characterName}</span> ${action} <span class="item-name">${itemName}</span>`;
+  }
 
   // ... other methods ...
 }

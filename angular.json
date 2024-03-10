@@ -43,7 +43,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumError": "1.25mb"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -79,7 +79,6 @@
           },
           "defaultConfiguration": "development"
         },
-        
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {

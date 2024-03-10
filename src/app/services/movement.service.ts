@@ -3,6 +3,8 @@ import { CharacterService } from './character.service';
 import { RoomsService } from './rooms.service';
 import { GameStateService } from './game-state.service';
 import { LocationUpdateService } from './location-update-fire.service';
+import { TextFeedService } from './text-feed.service';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -15,7 +17,9 @@ export class MovementService {
     private characterService: CharacterService,
     private roomsService: RoomsService,
     private gameStateService: GameStateService,
-    private locationUpdateService: LocationUpdateService
+    private locationUpdateService: LocationUpdateService,
+    private textFeedService: TextFeedService,
+
   ) {
     this.initializeCoordinates();
   }
@@ -61,6 +65,9 @@ export class MovementService {
 
     if (isValidMove) {
       
+      // Notify the player of their own movement
+        this.textFeedService.addMessage(`You moved ${direction.toLowerCase()}.`);
+
       // Update new location
       this.currentX = newX;
       this.currentY = newY;

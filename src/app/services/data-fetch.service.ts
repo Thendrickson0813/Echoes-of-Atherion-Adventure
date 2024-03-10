@@ -23,6 +23,26 @@ export class DataFetchService {
   constructor() { }
   
 
+  async fetchCharacterNameByDocumentId(docId: string): Promise<string | null> {
+    console.log(`fetchCharacterNameByDocumentId: Fetching character name for document ID: ${docId}`);
+    try {
+      const characterRef = doc(this.db, `characters/${docId}`);
+      const characterSnap = await getDoc(characterRef);
+  
+      if (characterSnap.exists()) {
+        const characterData = characterSnap.data();
+        console.log(`fetchCharacterNameByDocumentId: Found character. Name: ${characterData['characterName']}`);
+        return characterData['characterName'] ?? null;
+      } else {
+        console.error(`fetchCharacterNameByDocumentId: Character not found for document ID: ${docId}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('fetchCharacterNameByDocumentId: Error fetching character name:', error);
+      return null;
+    }
+  }
+  
   observeRoomItems(roomLocation: string): Observable<Item[]> {
     console.log('starting observeRoomItems');
         console.log(`observeRoomItems: Observing room items for location: ${roomLocation}`);

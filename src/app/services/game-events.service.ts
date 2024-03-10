@@ -20,7 +20,7 @@ export class GameEventsService {
 
   }
 
-  listenToGameEvents(location: string): void {
+  /* listenToGameEvents(location: string): void {
     console.log(`Listening to game events at location: ${location}`);
     const eventsRef = collection(getFirestore(), `locations/${location}/events`);
     onSnapshot(eventsRef, (snapshot) => {
@@ -35,9 +35,9 @@ export class GameEventsService {
       this.eventsSubject.next(gameEvents);
     });
     
-  }
+  } */
   
-  private handleGameEvent(gameEvent: GameEvent): void {
+ /*  private handleGameEvent(gameEvent: GameEvent): void {
     console.log('Handling game event:', gameEvent);
     switch (gameEvent.type) {
       case 'itemPickup':
@@ -67,6 +67,6 @@ export class GameEventsService {
     } catch (error) {
       console.error('Error creating game event:', error);
     }
-  }
+  } */
   // Additional methods to process different types of events
 }  
