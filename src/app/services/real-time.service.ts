@@ -32,6 +32,23 @@ export class RealTimeService {
     this.socket.on('character-leave', callback);
   }
 
+  emitCharacterEnter(roomLocation: string, message: string, characterId: string) {
+    console.log(`Emitting 'character-enter' event`);
+    console.log(`Room Location: ${roomLocation}`);
+    console.log(`Message: ${message}`);
+    console.log(`Character ID: ${characterId}`);
+    this.socket.emit('character-enter', { room: roomLocation, message, characterId });
+    console.log(`Event emitted`);
+  }
+  
+  
+  emitCharacterLeave(roomLocation: string, message: string, characterId: string) {
+    console.log(`Emitting 'character-enter' event`);
+    console.log(`Room Location: ${roomLocation}`);
+    console.log(`Message: ${message}`);
+    console.log(`Character ID: ${characterId}`);
+    this.socket.emit('character-leave', { room: roomLocation, message, characterId });
+  }
 
   emitJoinRoom(roomLocation: string, message: string, characterId: string) {
     this.socket.emit('join-room', { room: roomLocation, message, characterId });

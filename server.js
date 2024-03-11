@@ -31,20 +31,31 @@ const io = socketIo(server, {
 io.on('connection', (socket) => {
     console.log('New client connected');
 
-    socket.on('join-room', (data) => {
+     // Join or leave a room
+     socket.on('join-room', (data) => {
         const { room, characterName, characterId } = data;
         socket.join(room);
         console.log(`Character ${characterName} (ID: ${characterId}) joined room: ${room}`);
-        // Broadcast the character entering the room to others in the room
-        socket.to(room).emit('character-enter', `{characterName:${characterName}} just arrived.`);
     });
 
     socket.on('leave-room', (data) => {
         const { room, characterName, characterId } = data;
         socket.leave(room);
         console.log(`Character ${characterName} (ID: ${characterId}) left room: ${room}`);
-        // Broadcast the character leaving the room to others in the room
-        socket.to(room).emit('character-leave', `{characterName:${characterName}} just left.`);
+    });
+    
+
+     // Broadcast messages for entering or leaving
+     socket.on('character-enter', (data) => {
+        const { room, message } = data;
+        console.log(`Character enter message: ${message}`);
+        socket.to(room).emit('character-enter', message);
+    });
+
+    socket.on('character-leave', (data) => {
+        const { room, message } = data;
+        console.log(`Character leave message: ${message}`);
+        socket.to(room).emit('character-leave', message);
     });
 
     socket.on('item-picked-up', (data) => {
