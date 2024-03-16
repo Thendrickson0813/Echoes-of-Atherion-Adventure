@@ -5,6 +5,7 @@ import { GameStateService } from '../../services/game-state.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MyFsService } from 'src/app/services/my-fs';
+import { RealTimeService } from 'src/app/services/real-time.service';
 
 @Component({
   selector: 'app-navbar',
@@ -20,6 +21,7 @@ export class NavComponent {
     private router: Router,
     private gameStateService: GameStateService, // Inject the GameStateService
     private myFsService: MyFsService,
+    private realTimeService: RealTimeService,
     
   ) {
     this.router.events.pipe(
@@ -34,6 +36,7 @@ export class NavComponent {
 
   signOut() {
     this.authService.signOut().subscribe(() => {
+      this.realTimeService.disconnectFromGameServer();
       this.router.navigate(['/login']);
     });
   }
@@ -46,6 +49,8 @@ export class NavComponent {
         .then(() => {
           console.log('Character successfully logged out');
           // Additional logic if needed after character logout
+          this.realTimeService.disconnectFromGameServer();
+
           this.router.navigate(['/character-list']); // Navigate to character list
         })
         .catch(error => {

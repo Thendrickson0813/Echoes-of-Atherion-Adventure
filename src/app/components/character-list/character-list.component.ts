@@ -5,6 +5,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { GameStateService } from 'src/app/services/game-state.service';
 import { Router } from '@angular/router';
 import { RoomsService } from 'src/app/services/rooms.service';
+import { RealTimeService } from 'src/app/services/real-time.service';
 
 
 @Component({
@@ -23,6 +24,7 @@ export class CharacterListComponent implements OnInit {
     private myFsService: MyFsService,
     private gameStateService: GameStateService,
     private roomsService: RoomsService,
+    private realTimeService: RealTimeService,
     private router: Router
   ) { }
 
@@ -54,13 +56,13 @@ export class CharacterListComponent implements OnInit {
   onSelectCharacter(character: any): void {
     if (character && character.characterName) {
       console.log('Selected character:', character);
-  
+
       // Existing logic for setting the selected character
       this.selectedCharacter = character;
       this.gameStateService.setSelectedCharacter(character);
       this.gameStateService.setSelectedCharacterId(character.characterId);
       this.gameStateService.setSelectedCharacterFirestoreDocumentId(character.documentId);
-  
+
       // Update the character's online status
       this.myFsService.updateCharacterOnlineStatus(character.documentId, true)
         .then(() => {
@@ -75,7 +77,7 @@ export class CharacterListComponent implements OnInit {
       console.error('Character name not found in the selected character');
     }
   }
-  
+
 
   playWithSelectedCharacter() {
     if (this.selectedCharacter) {
@@ -94,6 +96,9 @@ export class CharacterListComponent implements OnInit {
       console.log(`Current character ID: ${currentCharacterId}`);
       console.log(`Current character Name: ${currentCharacterName}`);
       console.log(`Current character Location: ${currentCharacterLocation}`);
+
+      // Connect to the game server
+      this.realTimeService.connectToGameServer();
 
       // Navigate to the '/play' route
       this.router.navigate(['/play']);
