@@ -44,24 +44,7 @@ export class RoomsService {
 
   private lastProcessedUpdates = new Map<string, number>();
 
-  // This method subscribes to room items and processes them for a specific location.
-  // It listens for item updates and filters out items that have been picked up.
-  displayedRoomItems(roomLocation: string): void {
-    console.log(`RoomService: Function displayedRoomItems is being called for room: ${roomLocation}`);
-    // Logging the function call with the room location.
-    this.roomItemsSubscription = this.dataFetchService.observeAndProcessRoomItems(roomLocation).subscribe({
-      next: (itemsNotPickedUp) => {
-        // Logging the processed items that are not picked up.
-        console.log(`Processed items for room: ${roomLocation}`, itemsNotPickedUp);
-        // Updating the BehaviorSubject with the filtered items.
-        this.currentRoomItems.next(itemsNotPickedUp);
-      },
-      error: (error) => {
-        // Logging any errors encountered during the subscription.
-        console.error(`Error subscribing to processed items for room ${roomLocation}:`, error);
-      }
-    });
-  }
+ 
 
 
   getRoomEvents(): Observable<GameEvent | null> {
@@ -161,6 +144,46 @@ reinitializeListeners(newRoomLocation: string): void {
   // Here you can add any other setup tasks needed when switching to a new room.
 }
 
+ /* // This method subscribes to room items and processes them for a specific location.
+  // It listens for item updates and filters out items that have been picked up.
+  displayedRoomItems(roomLocation: string): void {
+    console.log(`RoomService: Function displayedRoomItems is being called for room: ${roomLocation}`);
+    // Logging the function call with the room location.
+    this.roomItemsSubscription = this.dataFetchService.observeAndProcessRoomItems(roomLocation).subscribe({
+      next: (itemsNotPickedUp) => {
+        // Logging the processed items that are not picked up.
+        console.log(`Processed items for room: ${roomLocation}`, itemsNotPickedUp);
+        // Updating the BehaviorSubject with the filtered items.
+        this.currentRoomItems.next(itemsNotPickedUp);
+      },
+      error: (error) => {
+        // Logging any errors encountered during the subscription.
+        console.error(`Error subscribing to processed items for room ${roomLocation}:`, error);
+      }
+    });
+  } */
+
+ // Method to update room items based on location. This method is not used if using observeAndProcessRoomItems.
+ updateRoomItems(location: string): void {
+  console.log("updateRoomItems: Method called to update room items for location:", location);
+  // Fetches items in the room and updates the BehaviorSubject with items that are not picked up.
+  this.itemsService.getItemsInRoom(location).subscribe({
+    next: (items) => {
+      console.log("updateRoomItems: Received items from getItemsInRoom:", items);
+      // Filter out items that are picked up.
+      const itemsNotPickedUp = items.filter(item => !item.isPickedUp);
+      console.log("updateRoomItems: Filtered items not picked up:", itemsNotPickedUp);
+
+      // Update the BehaviorSubject with the filtered items.        
+      this.currentRoomItems.next(itemsNotPickedUp);
+      console.log("updateRoomItems: Updated currentRoomItems BehaviorSubject with items not picked up.");
+    },
+    error: (error) => {
+      // Log any errors encountered while fetching items.
+      console.error("updateRoomItems: Error fetching items for room", location, ":", error);
+    }
+  });
+}
 
   // Checks if the given location is a valid room in the game world.
   async isValidRoom(location: string): Promise<boolean> {
@@ -198,27 +221,7 @@ reinitializeListeners(newRoomLocation: string): void {
   getRoomDescription(): Observable<string> {
     return this.currentRoomDescription.asObservable();
   }
-  // Method to update room items based on location. This method is not used if using observeAndProcessRoomItems.
-  updateRoomItems(location: string): void {
-    console.log("updateRoomItems: Method called to update room items for location:", location);
-    // Fetches items in the room and updates the BehaviorSubject with items that are not picked up.
-    this.itemsService.getItemsInRoom(location).subscribe({
-      next: (items) => {
-        console.log("updateRoomItems: Received items from getItemsInRoom:", items);
-        // Filter out items that are picked up.
-        const itemsNotPickedUp = items.filter(item => !item.isPickedUp);
-        console.log("updateRoomItems: Filtered items not picked up:", itemsNotPickedUp);
-
-        // Update the BehaviorSubject with the filtered items.        
-        this.currentRoomItems.next(itemsNotPickedUp);
-        console.log("updateRoomItems: Updated currentRoomItems BehaviorSubject with items not picked up.");
-      },
-      error: (error) => {
-        // Log any errors encountered while fetching items.
-        console.error("updateRoomItems: Error fetching items for room", location, ":", error);
-      }
-    });
-  }
+ 
   // This method returns an Observable for room items.
   // Components can subscribe to this Observable to get real-time updates on room items.
   getRoomItems(): Observable<Item[]> {

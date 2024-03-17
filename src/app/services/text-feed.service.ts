@@ -10,9 +10,7 @@ export class TextFeedService {
   private characterMessageMap: Map<string, string[]> = new Map();
 
   addMessage(message: string) {
-    console.log("Original message:", message);
     const styledMessage = this.styleMessageParts(message);
-    console.log("Styled message:", styledMessage);
     this.textFeed.push(styledMessage);
     this.textFeedChange.next(this.textFeed);
   }

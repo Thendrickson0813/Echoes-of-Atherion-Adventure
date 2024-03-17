@@ -37,6 +37,10 @@ export class CharacterListComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    
+  }
+
   fetchCharacters() {
     console.log('character-list Fetching characters for user ID:', this.userId);
 
@@ -56,13 +60,13 @@ export class CharacterListComponent implements OnInit {
   onSelectCharacter(character: any): void {
     if (character && character.characterName) {
       console.log('Selected character:', character);
-
+  
       // Existing logic for setting the selected character
       this.selectedCharacter = character;
       this.gameStateService.setSelectedCharacter(character);
       this.gameStateService.setSelectedCharacterId(character.characterId);
       this.gameStateService.setSelectedCharacterFirestoreDocumentId(character.documentId);
-
+  
       // Update the character's online status
       this.myFsService.updateCharacterOnlineStatus(character.documentId, true)
         .then(() => {
@@ -77,7 +81,7 @@ export class CharacterListComponent implements OnInit {
       console.error('Character name not found in the selected character');
     }
   }
-
+  
 
   playWithSelectedCharacter() {
     if (this.selectedCharacter) {
@@ -85,6 +89,8 @@ export class CharacterListComponent implements OnInit {
 
       // Set the selected character in GameStateService
       this.gameStateService.setSelectedCharacter(this.selectedCharacter);
+
+       
 
       // Optionally, retrieve and use the information from GameStateService
       const currentCharacter = this.gameStateService.getSelectedCharacter();
@@ -97,9 +103,9 @@ export class CharacterListComponent implements OnInit {
       console.log(`Current character Name: ${currentCharacterName}`);
       console.log(`Current character Location: ${currentCharacterLocation}`);
 
-      // Connect to the game server
-      this.realTimeService.connectToGameServer();
-
+      // Connect to the server when the Play button is clicked
+       this.realTimeService.initializeSocketConnection();
+       console.log("connecting to server")
       // Navigate to the '/play' route
       this.router.navigate(['/play']);
     }

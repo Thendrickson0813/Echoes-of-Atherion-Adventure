@@ -32,6 +32,7 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
   roomName: string = '';
   roomDescription: string = '';
   roomItems: Item[] = [];
+
   roomCharacters: Characters[] = [];
   currentCharacterId: string | null = null;  // Add this line to declare the property
   currentHistoryIndex: number = -1; // Start at -1
@@ -83,31 +84,25 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngOnInit() {
-
-    this.fetchCharacterName(); // Call a method to fetch and store the character's name
-
+  private setupEventListeners() {
     this.realTimeService.onCharacterEnter((message) => {
       console.log('Character enter event:', message);
       const currentCharacterId = this.gameStateService.getSelectedCharacterId();
-      
+
       // Ensure currentCharacterId is not null before checking
       if (currentCharacterId && !message.includes(currentCharacterId)) {
         this.textFeedService.addMessage(message);
       }
     });
-    
-  
-  
+
     this.realTimeService.onCharacterLeave((message) => {
       console.log('Character leave event:', message);
       const currentCharacterId = this.gameStateService.getSelectedCharacterId();
-      
+
       if (currentCharacterId && !message.includes(currentCharacterId)) {
         this.textFeedService.addMessage(message);
       }
     });
-  
 
     this.realTimeService.onItemPickedUp((data) => {
       console.log('Received item pickup event:', data);
@@ -134,7 +129,20 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
         console.log('Adding styled message for Drop item in gameplay component');
       }
     });
+  }
 
+  ngOnInit() {
+
+    // Check if a character is selected
+    if (!this.gameStateService.getSelectedCharacter()) {
+      console.log('No character selected, redirecting to login.');
+      this.router.navigate(['/character-list']); // Redirect to the login page
+      return; // Stop further execution of ngOnInit
+    }
+    
+    this.fetchCharacterName(); // Call a method to fetch and store the character's name
+    this.setupEventListeners(); // Set up event listeners
+  
     // Get the selected character ID from the GameStateService
     this.currentCharacterId = this.gameStateService.getSelectedCharacterId();
 
@@ -215,8 +223,7 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy() {
-
-    // Unsubscribe from all subscriptions to prevent memory leaks
+    // Unsubscribe from all observable subscriptions to prevent memory leaks
     this.realTimeService.removeItemPickedUpListener();
     this.realTimeService.removeItemDropListener();
     this.roomDescriptionSubscription?.unsubscribe();
@@ -225,16 +232,12 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     this.textFeedChangeSubscription?.unsubscribe();
     this.characterOnlineStatusSubscription?.unsubscribe();
     this.locationChangeSubscription?.unsubscribe();
-    this.roomEventsSubscription.unsubscribe();
-    this.locationChangeSubscription?.unsubscribe();
+    this.roomEventsSubscription?.unsubscribe();
     this.roomNameSubscription?.unsubscribe();
 
-    // Perform cleanup in RoomsService, which unsubscribes from its observables
+    // Perform cleanup in RoomsService
     this.roomsService.cleanupListeners();
-    if (this.roomEventsSubscription) {
-      this.roomEventsSubscription.unsubscribe();
-    }
-  }
+}
   // game-play.component.ts
   private async updateLocationAndListenToEvents(newLocation: string) {
     const characterId = this.gameStateService.getSelectedCharacterId() || 'unknown-character';
@@ -263,6 +266,8 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     return 'Unknown Character'; // Fallback in case character name can't be retrieved
   }
+
+  
 
   ngAfterViewInit() {
     // Additional logic to be executed after the view initialization
@@ -323,7 +328,7 @@ export class GamePlayComponent implements OnInit, OnDestroy, AfterViewInit {
       right: 'East'
     };
 
-    
+
     const mappedDirection = dirMap[direction];
     if (mappedDirection) {
       this.movementService.move(mappedDirection);

@@ -37,9 +37,11 @@ export class NavComponent {
   signOut() {
     this.authService.signOut().subscribe(() => {
       this.realTimeService.disconnectFromGameServer();
+
       this.router.navigate(['/login']);
     });
   }
+  
   logoutCharacter() {
     // Call getSelectedCharacterId as a method
     const characterId = this.gameStateService.getSelectedCharacterFirestoreDocumentId();
