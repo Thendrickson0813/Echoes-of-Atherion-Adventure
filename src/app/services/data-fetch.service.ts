@@ -44,29 +44,26 @@ export class DataFetchService {
   }
   
   observeRoomItems(roomLocation: string): Observable<Item[]> {
-    console.log('starting observeRoomItems');
         console.log(`observeRoomItems: Observing room items for location: ${roomLocation}`);
   
     return new Observable<Item[]>(observer => {
       const itemsRef = query(collection(this.db, 'items'), where('location', '==', roomLocation));
   
-      console.log(`observeRoomItems: Setting up onSnapshot for itemsRef.`);
       const unsubscribe = onSnapshot(itemsRef, (querySnapshot) => {
-        console.log(`observeRoomItems: Received query snapshot for items.`);
         const items: Item[] = [];
   
         querySnapshot.forEach((doc) => {
           console.log(`observeRoomItems: Processing document: `, doc.data());
           const item = doc.data() as Item;
-          console.log("Item data:", item); // Logging the item data
+          
 
           if (!item.isPickedUp) {
-            console.log(`observeRoomItems: Adding item to array: `, item);
+          
             items.push(item);
           }
         });
   
-        console.log(`observeRoomItems: Emitting items array: `, items);
+       
         observer.next(items);
       }, error => {
         console.error(`observeRoomItems: Error in onSnapshot:`, error);
@@ -75,13 +72,34 @@ export class DataFetchService {
   
       // Log the cleanup action
       return () => {
-        console.log(`observeRoomItems: Unsubscribing from itemsRef.`);
+        console.log(`observeRoomItems: Unsubscribing from observing room items.`);
         unsubscribe();
       };
     });
   }
   
-
+  observeAndProcessRoomItems(roomLocation: string): Observable<Item[]> {
+    return this.observeRoomItems(roomLocation).pipe(
+      map(items => {
+        items.forEach(item => {
+          if (item.id && item.isPickedUp && item.lastUpdated && this.isNewUpdate(item.id, item.lastUpdated)) {
+            console.log(`Item pickup detected. Item ID: ${item.id}, broadcasting pickup.`);
+            // Update last processed update
+            if (item.lastUpdated.seconds) {
+              this.lastProcessedUpdates.set(item.id, item.lastUpdated.seconds);
+            }
+            // Handle broadcasting here or call another service
+          }
+        });
+        return items.filter(item => !item.isPickedUp);
+      }),
+      catchError(error => {
+        console.error(`Error processing items for room ${roomLocation}:`, error);
+        return of([]); // Return an empty array on error
+      })
+    );
+  }
+  
   async fetchCharacterNameByOwnerId(ownerId: string): Promise<string | null> {
     console.log(`fetchCharacterNameByOwnerId: Fetching character name for ownerId: ${ownerId}`);
     try {
@@ -243,27 +261,7 @@ observeRoomCharacters(roomLocation: string): Observable<Characters[]> {
     return snapshot.docs.map(doc => doc.data() as Characters);
   }
 
-  observeAndProcessRoomItems(roomLocation: string): Observable<Item[]> {
-    return this.observeRoomItems(roomLocation).pipe(
-      map(items => {
-        items.forEach(item => {
-          if (item.id && item.isPickedUp && item.lastUpdated && this.isNewUpdate(item.id, item.lastUpdated)) {
-            console.log(`Item pickup detected. Item ID: ${item.id}, broadcasting pickup.`);
-            // Update last processed update
-            if (item.lastUpdated.seconds) {
-              this.lastProcessedUpdates.set(item.id, item.lastUpdated.seconds);
-            }
-            // Handle broadcasting here or call another service
-          }
-        });
-        return items.filter(item => !item.isPickedUp);
-      }),
-      catchError(error => {
-        console.error(`Error processing items for room ${roomLocation}:`, error);
-        return of([]); // Return an empty array on error
-      })
-    );
-  }
+ 
   
   async fetchItemNameById(itemId: string): Promise<string | null> {
     console.log(`fetchItemNameById: Fetching item name for itemId: ${itemId}`);

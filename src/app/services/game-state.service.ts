@@ -33,7 +33,6 @@ export class GameStateService {
 
   setSelectedCharacterId(id: string) {
     this.selectedCharacterId.next(id);
-    console.log(`GameStateService: Character ID set: ${id}`);
   }
   getSelectedCharacterId(): string | null {
     return this.selectedCharacterId.value;
@@ -42,7 +41,6 @@ export class GameStateService {
 
   setSelectedCharacterFirestoreDocumentId(documentId: string) {
     this.selectedCharacterFirestoreDocumentId.next(documentId);
-    console.log(`GameStateService: Firestore Document ID set to ${documentId}`);
   }
   
   getSelectedCharacterFirestoreDocumentId(): string | null {
@@ -51,7 +49,6 @@ export class GameStateService {
   
   setSelectedCharacterName(name: string | null) {
     this.selectedCharacterName.next(name);
-    console.log(`GameStateService: Character Name set: ${name}`);
   }
   getSelectedCharacterName(): string | null {
     return this.selectedCharacterName.value;
@@ -60,7 +57,6 @@ export class GameStateService {
 
   setSelectedCharacterLocation(location: string | null) {
     this.selectedCharacterLocation.next(location);
-    console.log(`GameStateService: Character Location set: ${location}`);
   }
   getSelectedCharacterLocation(): string | null {
     return this.selectedCharacterLocation.value;

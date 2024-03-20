@@ -10,22 +10,22 @@ export class CharacterService {
   constructor() {}
 
   // This method sets the current location to the provided string.
-setLocation(newLocation: string) {
-  // Emits the new location to any subscribers via the internal location subject.
-  this.location.next(newLocation);
-}
+  setLocation(newLocation: string) {
+    console.log("Setting location to:", newLocation);
+    this.location.next(newLocation);
+  }
 
 // This method returns an Observable of the current location (string or null).
 getLocation(): Observable<string | null> {
-  // Returns an Observable that emits the current location stored in the internal subject.
+  console.log("Getting current location as an Observable");
   return this.location.asObservable();
 }
 
 // This method returns the ID of the currently selected character.
 getSelectedCharacterId(): string {
-  // This is a placeholder implementation. 
-  // Ideally, this would retrieve and return the actual character ID from storage.
-  return 'character-id';
+  const characterId = 'character-id'; // Replace with actual logic to retrieve the character ID
+  console.log("Current selected character ID:", characterId);
+  return characterId;
 }
 
 

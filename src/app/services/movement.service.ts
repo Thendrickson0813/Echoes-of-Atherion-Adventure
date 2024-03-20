@@ -68,10 +68,16 @@ export class MovementService {
     const isValidMove = await this.roomsService.isValidRoom(newLocation); // Checks if the new location is a valid room
 
     if (isValidMove) {
-      const characterName = await this.fetchCharacterName();
+      // Use character name from GameStateService
+      const characterName = this.gameStateService.getSelectedCharacterName();
+      if (!characterName) {
+        console.error('Failed to retrieve character name.');
+        return;
+      }
       const characterId = this.gameStateService.getSelectedCharacterId() || 'unknown-character';
       // Set current location to old location before the move
       const oldLocation = this.currentLocation;
+      console.log(`Current location before leaving: ${this.currentLocation}`);
 
 
 
@@ -79,46 +85,40 @@ export class MovementService {
         const leaveMessage = `{characterName:${characterName}} went ${direction.toLowerCase()}.`;
         console.log("attempting to notify other players with realtimeservice emitCharacterLeave")
         this.realTimeService.emitCharacterLeave(oldLocation, leaveMessage, characterId);
-        // Notify the player of their own movement WORKING
-        
+    
+         // Clean up listeners for the current room
+       this.roomsService.cleanupListeners();
+       console.log('cleaning up listeners before move');
       }
+
       this.textFeedService.addMessage(`You moved ${direction.toLowerCase()}.`);
       // Update new location
       this.currentX = newX;
       this.currentY = newY;
       this.currentLocation = newLocation;
-      console.log(`Current location before leaving: ${this.currentLocation}`);
+      console.log(`location after leaving: ${this.currentLocation}`);
 
       // Update location in other services
       this.characterService.setLocation(newLocation);
+      console.log("setting location in characterService");
       this.gameStateService.setSelectedCharacterLocation(newLocation);
+      console.log("setting location in gameStateService");
 
-      // Clean up listeners for the current room
-      this.roomsService.cleanupListeners();
+     
 
       // Updates the database
-      console.log('cleaning up listeners before move');
+      
       this.locationUpdateService.updateLocation(newLocation);
+      console.log("updating database with new location");
 
       // Notify other players in the new room about arriving
       const enterMessage = `{characterName:${characterName}} just arrived.`;
       this.realTimeService.emitCharacterEnter(newLocation, enterMessage, characterId);
+      console.log("notifying players in new location about arrival")
 
       // Reinitialize listeners for the new room
       this.roomsService.reinitializeListeners(newLocation);
       console.log("Reinitialize listeners for the new room");
     }
   }
-  private async fetchCharacterName(): Promise<string> {
-    const characterId = this.gameStateService.getSelectedCharacterId();
-    if (characterId) {
-      const characterDocId = await this.dataFetchService.getDocumentIdByCharacterId(characterId);
-      if (characterDocId) {
-        const characterName = await this.dataFetchService.fetchCharacterNameByDocumentId(characterDocId);
-        return characterName || 'Unknown Character'; // Return 'Unknown Character' if characterName is null
-      }
-    }
-    return 'Unknown Character'; // Fallback in case character name can't be retrieved
-  }
-
 }

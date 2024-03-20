@@ -84,7 +84,6 @@ export class RoomsService {
 
   // This method unsubscribes from current room observables to prevent memory leaks and unnecessary updates.
   cleanupListeners(): void {
-    console.log('[RoomsService] CleanupListeners called');
     // Unsubscribing from room items if a subscription exists.
     if (this.roomItemsSubscription) {
       this.roomItemsSubscription.unsubscribe();
@@ -144,26 +143,7 @@ reinitializeListeners(newRoomLocation: string): void {
   // Here you can add any other setup tasks needed when switching to a new room.
 }
 
- /* // This method subscribes to room items and processes them for a specific location.
-  // It listens for item updates and filters out items that have been picked up.
-  displayedRoomItems(roomLocation: string): void {
-    console.log(`RoomService: Function displayedRoomItems is being called for room: ${roomLocation}`);
-    // Logging the function call with the room location.
-    this.roomItemsSubscription = this.dataFetchService.observeAndProcessRoomItems(roomLocation).subscribe({
-      next: (itemsNotPickedUp) => {
-        // Logging the processed items that are not picked up.
-        console.log(`Processed items for room: ${roomLocation}`, itemsNotPickedUp);
-        // Updating the BehaviorSubject with the filtered items.
-        this.currentRoomItems.next(itemsNotPickedUp);
-      },
-      error: (error) => {
-        // Logging any errors encountered during the subscription.
-        console.error(`Error subscribing to processed items for room ${roomLocation}:`, error);
-      }
-    });
-  } */
-
- // Method to update room items based on location. This method is not used if using observeAndProcessRoomItems.
+/*  // Method to update room items based on location. This method is not used if using observeAndProcessRoomItems.
  updateRoomItems(location: string): void {
   console.log("updateRoomItems: Method called to update room items for location:", location);
   // Fetches items in the room and updates the BehaviorSubject with items that are not picked up.
@@ -183,22 +163,25 @@ reinitializeListeners(newRoomLocation: string): void {
       console.error("updateRoomItems: Error fetching items for room", location, ":", error);
     }
   });
-}
+} */
 
-  // Checks if the given location is a valid room in the game world.
-  async isValidRoom(location: string): Promise<boolean> {
-    try {
-      // Query Firestore to check if the room exists based on the location.
-      const roomRef = query(collection(this.db, 'locations'), where('location', '==', location));
-      const roomSnapshot = await getDocs(roomRef);
-      // Return true if the room exists (i.e., the query returned documents).
-      return !roomSnapshot.empty;
-    } catch (error) {
-      // Log and return false if an error occurs during the query.
-      console.error(`Error in isValidRoom for location ${location}:`, error);
-      return false;
-    }
+ // Checks if the given location is a valid room in the game world.
+async isValidRoom(location: string): Promise<boolean> {
+  console.log("Starting isValidRoom check for location:", location);
+  try {
+    // Query Firestore to check if the room exists based on the location.
+    const roomRef = query(collection(this.db, 'locations'), where('location', '==', location));
+    const roomSnapshot = await getDocs(roomRef);
+    // Check if the room exists (i.e., the query returned documents).
+    const roomExists = !roomSnapshot.empty;
+    console.log(`isValidRoom: Room '${location}' exists:`, roomExists);
+    return roomExists;
+  } catch (error) {
+    // Log and return false if an error occurs during the query.
+    console.error(`Error in isValidRoom for location '${location}':`, error);
+    return false;
   }
+}
 
   // Fetches which items a character is holding in their hands.
   async getCharacterHands(characterId: string): Promise<{ leftHand: string | null, rightHand: string | null }> {

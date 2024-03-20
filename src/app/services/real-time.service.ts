@@ -8,7 +8,7 @@ export class RealTimeService {
   private socket?: Socket;
 
   constructor() {
-    
+
     console.log('Socket initialized');
   }
 
@@ -16,7 +16,7 @@ export class RealTimeService {
     if (!this.socket || !this.socket.connected) {
       this.socket = io('http://localhost:3000');
       console.log('Socket initialized and attempting to connect to game server');
-      
+
       this.socket.on('connect', () => {
         console.log('Connected to game server');
       });
@@ -83,21 +83,14 @@ export class RealTimeService {
 
   emitCharacterEnter(roomLocation: string, message: string, characterId: string) {
     if (this.socket) {
-      console.log(`Emitting 'character-enter' event`);
-      console.log(`Room Location: ${roomLocation}`);
-      console.log(`Message: ${message}`);
-      console.log(`Character ID: ${characterId}`);
+      console.log(`Emitting 'character-enter' event. Message that is sent for characters in room ${roomLocation}: ${message}`);
       this.socket.emit('character-enter', { room: roomLocation, message, characterId });
-      console.log(`Event emitted`);
     }
   }
 
   emitCharacterLeave(roomLocation: string, message: string, characterId: string) {
     if (this.socket) {
-      console.log(`Emitting 'character-enter' event`);
-      console.log(`Room Location: ${roomLocation}`);
-      console.log(`Message: ${message}`);
-      console.log(`Character ID: ${characterId}`);
+      console.log(`Emitting 'character-leave' event. Message that is sent for characters in room ${roomLocation}: ${message}`);
       this.socket.emit('character-leave', { room: roomLocation, message, characterId });
     }
   }

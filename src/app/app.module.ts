@@ -29,6 +29,7 @@ import { LocationUpdateService } from './services/location-update-fire.service';
 import { FormsModule } from '@angular/forms';
 import { InteractiveWindowComponent } from './components/interactive-window/interactive-window.component';
 import { DataFetchService } from './services/data-fetch.service';
+import { RoomDisplayComponent } from './components/game-play/room-display/room-display.component';
 
 
 
@@ -45,6 +46,7 @@ import { DataFetchService } from './services/data-fetch.service';
     CharacterCreationComponent,
     CharacterListComponent,
     InteractiveWindowComponent,
+    RoomDisplayComponent,
   ],
   imports: [
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
